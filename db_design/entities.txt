@@ -1,9 +1,12 @@
-MESOCYCLE()
-ROUTINE()
-SESSION()
-USER()
-EXERCISE()
-EXERCISE_TYPE()
-EXERCISE_SET()
-BODY_PART()
-EQUIPMENT()
+User              - Represents the person using the app
+Mesocycle         - This is the reusable workout plan template (not the workout history)
+MesocycleDay      - This represents a planned training day within the mesocycle template
+PlannedExercise   - This is the planned exercise inside a mesocycle day (exercise, mesocycleDay, targetSets, etc.) 
+Exercise          - A catalog exercise
+ExerciseType      - Enum
+BodyPart          - Enum
+Equipment         - Enum
+MesocycleInstance - A user may run the same mesocycle multiple times across the year. Each time should be its own instance.
+WorkoutSession    - This is one actual completed or started training session, tied to a mesocycle instance
+PerformedExercise - This is the actual exercise performed during a specific session
+PerformedSet      - The most granular history record, belongs to one performed_exercise

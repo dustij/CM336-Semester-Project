@@ -20,6 +20,7 @@ MESOCYCLE_DAY
   - mesocycle_id (FK)
   - name
   - day_of_week
+  - day_order
 
 PLANNED_EXERCISE
   The planned exercise inside a mesocycle day

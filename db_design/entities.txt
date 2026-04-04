@@ -38,7 +38,7 @@ EXERCISE
   - name
   - description
   - exercise_type
-  - body_part
+  - muscle_group
   - equipment
   - is_custom
   - created_by_user_id (FK) nullable

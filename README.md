@@ -1,36 +1,13 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CM336-Semester-Project
 
-## Getting Started
+This project is a Workout Planner and Tracker. The goal of this application is to allow the user to create and save workout routines and track workout sessions. Exercises can be found from a large library or created custom by the user. Exercises can be searched by title, type (strength, stretching, etc.), body part, equipment, and level (beginner, intermediate, etc.).
 
-First, run the development server:
+Users will build mesocycles (1–4 week workout routines) and log each session’s reps and sets completed. The user will build a collection of mesocycles, with the ability to star mesocycles and start new mesocycles from existing routines they’ve created.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+When creating a mesocycle, the user chooses how many days per week (2–6) and selects the exercises for each day, including weight, sets, and reps. As they work through a session, they can log (check off) each set and record the reps, choose to skip a set, delete a set, or add a set. Deleting a set will remove it for the rest of the mesocycle, while skipping applies only to that session.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Each session saves the user’s exercise data, including the total workload (sets × reps × weight) for each exercise per session, as well as total reps. This allows the user to view progress over time for each exercise and muscle group. The user can also track their weight to measure gains or losses depending on their goals.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Ultimately, the database will maintain a library of pre-existing exercises (and their attributes), while also tracking user-specific data such as custom exercises, mesocycles (routines), and fitness metrics.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Together, this application enables the user to plan, track, and measure their progress as they work toward their personal fitness goals.

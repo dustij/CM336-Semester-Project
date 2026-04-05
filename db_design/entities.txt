@@ -28,9 +28,6 @@ PLANNED_EXERCISE
   - mesocyle_day_id (FK1)
   - exercise_id (FK2)
   - exercise_order
-  - target_weight
-  - target_sets
-  - target_reps
 
 EXERCISE
   A catalog exercise
@@ -73,6 +70,7 @@ PERFORMED_EXERCISE
   - exercise_order
   - is_substituted
   - completed
+  - notes
 
   note: This lets us handle exercises from the plan or exercises added on the fly
 

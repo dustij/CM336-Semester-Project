@@ -1,13 +1,14 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* Next 16/Turbopack does not resolve these CSS-only package exports reliably. */
+@import "../node_modules/tw-animate-css/dist/tw-animate.css";
+@import "../node_modules/shadcn/dist/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);

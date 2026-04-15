@@ -61,7 +61,7 @@ export function LoginForm() {
           <Button
             type='submit'
             disabled={pending}
-            className='h-10 w-full rounded-xl bg-[#ff3945] text-white hover:bg-[#f12f3a]'
+            className='h-10 w-full rounded-xl cursor-pointer'
           >
             {pending ? 'Logging In...' : 'Log In'}
           </Button>
@@ -69,7 +69,7 @@ export function LoginForm() {
             type='button'
             variant='secondary'
             asChild
-            className='mt-4 h-10 w-full rounded-xl bg-[#fff2f2] text-[#b33d43] hover:bg-[#ffe7e7]'
+            className='mt-4 h-10 w-full rounded-xl'
           >
             <Link href='/signup'>Sign Up</Link>
           </Button>

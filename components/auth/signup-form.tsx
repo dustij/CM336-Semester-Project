@@ -76,7 +76,7 @@ export function SignupForm() {
         <div className='mt-[60px]'>
           <Button
             type='submit'
-            className='h-10 w-full rounded-xl bg-[#ff3945] text-white hover:bg-[#f12f3a]'
+            className='h-10 w-full rounded-xl cursor-pointer'
           >
             Create Account
           </Button>
@@ -84,7 +84,7 @@ export function SignupForm() {
             type='button'
             variant='secondary'
             asChild
-            className='mt-4 h-10 w-full rounded-xl bg-[#fff2f2] text-[#b33d43] hover:bg-[#ffe7e7]'
+            className='mt-4 h-10 w-full rounded-xl'
           >
             <Link href='/login'>Back To Login</Link>
           </Button>

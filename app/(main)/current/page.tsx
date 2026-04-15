@@ -1,6 +1,10 @@
+import { getAuthenticatedEmail, requireAuthentication } from '@/lib/auth/session';
 import Link from "next/link";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  await requireAuthentication();
+  const email = await getAuthenticatedEmail();
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[393px] flex-col px-6 py-12">
@@ -11,6 +15,9 @@ export default function DashboardPage() {
           </h1>
           <p className="mt-4 text-sm text-slate-600">
             This is a placeholder page for after login.
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Signed in as {email}
           </p>
           <Link
             href="/login"

@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { redirectFromHomePage } from '@/lib/auth/session';
 
-export default function Page() {
-  redirect("/login");
+export default async function Page() {
+  await redirectFromHomePage();
 }

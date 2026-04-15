@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 
 export function PasswordField({
   id,
+  name,
   label,
   value,
   visible,
@@ -15,6 +16,7 @@ export function PasswordField({
   onToggle,
 }: {
   id: string;
+  name?: string;
   label: string;
   value: string;
   visible: boolean;
@@ -29,6 +31,7 @@ export function PasswordField({
       <div className="relative">
         <Input
           id={id}
+          name={name}
           type={visible ? "text" : "password"}
           value={value}
           onChange={(event) => onChange(event.target.value)}

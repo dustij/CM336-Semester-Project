@@ -1,9 +1,14 @@
-import { cookies } from 'next/headers';
 import 'server-only';
-// import { redirect } from 'next/navigation';
 
-import { SessionPayload } from '@/lib/definitions';
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { cache } from 'react';
+
+export type SessionPayload = JWTPayload & {
+  userId: number;
+  expiresAt: Date;
+};
 
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -22,7 +27,7 @@ export async function decrypt(session: string | undefined = '') {
   }
 
   try {
-    const { payload } = await jwtVerify(session, encodedKey, {
+    const { payload } = await jwtVerify<SessionPayload>(session, encodedKey, {
       algorithms: ['HS256'],
     });
     return payload;
@@ -50,28 +55,13 @@ export async function deleteSession() {
   cookieStore.delete('session');
 }
 
-// export const AUTH_SESSION_COOKIE = 'cm336-auth-session';
+export const verifySession = cache(async () => {
+  const cookie = (await cookies()).get('session')?.value;
+  const session = await decrypt(cookie);
 
-// export async function getAuthenticatedEmail() {
-//   const sessionCookie = (await cookies()).get(AUTH_SESSION_COOKIE)?.value?.trim();
+  if (!session?.userId) {
+    redirect('/login');
+  }
 
-//   return sessionCookie || null;
-// }
-
-// export async function isAuthenticated() {
-//   return (await getAuthenticatedEmail()) !== null;
-// }
-
-// export async function redirectFromHomePage() {
-//   if (await isAuthenticated()) {
-//     redirect('/current');
-//   }
-
-//   redirect('/login');
-// }
-
-// export async function requireAuthentication() {
-//   if (!(await isAuthenticated())) {
-//     redirect('/login');
-//   }
-// }
+  return { isAuth: true, userId: session.userId };
+});

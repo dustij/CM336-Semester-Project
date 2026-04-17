@@ -24,7 +24,7 @@ export function NavButton({
       aria-current={isActive ? 'page' : undefined}
       className={cn(
         'text-body flex w-[75px] flex-col items-center justify-center gap-1.5 py-3',
-        isActive && 'text-my-primary border-my-primary border-t'
+        isActive && 'text-my-primary border-my-primary border-t-2'
       )}
     >
       <div>
@@ -39,7 +39,7 @@ export default function Footer() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex justify-between border-t bg-white px-5">
+    <nav className="border-border flex justify-between border-t bg-white px-5">
       <NavButton
         href="/current"
         icon={Timer}

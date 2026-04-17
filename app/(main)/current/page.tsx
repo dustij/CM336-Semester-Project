@@ -1,8 +1,8 @@
 import CurrentPage from '@/components/main/CurrentPage';
-import { verifySession } from '@/lib/dal';
+import { verifySession } from '@/lib/session';
 
 export default async function Current() {
-  await verifySession();
+  const { userId } = await verifySession();
 
-  return <CurrentPage />;
+  return <CurrentPage userId={userId} />;
 }

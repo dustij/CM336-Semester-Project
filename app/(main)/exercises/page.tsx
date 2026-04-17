@@ -1,5 +1,5 @@
 import ExercisesPage from '@/components/main/ExercisesPage';
-import { verifySession } from '@/lib/dal';
+import { verifySession } from '@/lib/session';
 
 export default async function Exercises() {
   await verifySession();

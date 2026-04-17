@@ -46,8 +46,6 @@ export type LoginFormState =
     }
   | undefined;
 
-export type SessionPayload = { userId: number; expiresAt: Date };
-
 export type User = {
   userId: number;
   email: string;

@@ -10,7 +10,7 @@ export default function layout({
     <main className="bg-background min-h-screen">
       <div className="bg-my-background mx-auto flex max-h-screen min-h-screen w-full max-w-[393px] flex-col">
         <Header />
-        <div className="bg-my-background flex-1">{children}</div>
+        <div className="bg-my-background flex flex-1">{children}</div>
         <Footer />
       </div>
     </main>

@@ -1,14 +1,16 @@
-"use client";
+'use client';
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 export function PasswordField({
   id,
   name,
+  className,
   label,
   value,
   visible,
@@ -17,6 +19,7 @@ export function PasswordField({
 }: {
   id: string;
   name?: string;
+  className?: string;
   label: string;
   value: string;
   visible: boolean;
@@ -32,18 +35,21 @@ export function PasswordField({
         <Input
           id={id}
           name={name}
-          type={visible ? "text" : "password"}
+          type={visible ? 'text' : 'password'}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 rounded-xl border-slate-200 pr-10 shadow-none"
+          className={cn(
+            'h-10 rounded-xl border-slate-200 pr-10 shadow-none',
+            className
+          )}
         />
         <Button
           type="button"
           variant="ghost"
           size="icon-sm"
           onClick={onToggle}
-          className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:bg-transparent hover:text-slate-600"
-          aria-label={visible ? "Hide password" : "Show password"}
+          className="absolute top-1/2 right-1 -translate-y-1/2 text-slate-400 hover:bg-transparent hover:text-slate-600"
+          aria-label={visible ? 'Hide password' : 'Show password'}
         >
           {visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
         </Button>

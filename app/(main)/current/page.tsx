@@ -1,14 +1,15 @@
-import {
-  getAuthenticatedEmail,
-  requireAuthentication,
-} from '@/lib/auth/session';
+import { getUser } from '@/lib/dal';
+import { redirect } from 'next/navigation';
 
 export default async function DashboardPage() {
-  await requireAuthentication();
-  const email = await getAuthenticatedEmail();
+  const user = await getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
 
   return (
-    <main className='bg-my-background'>
+    <main className="bg-my-background">
       {/* <div className="mx-auto flex min-h-screen w-full max-w-[393px] flex-col px-6 py-12">
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
           <p className="text-sm text-slate-500">Dashboard</p>

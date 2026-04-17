@@ -21,10 +21,7 @@ export const SignupFormSchema = z
 
 export const LoginFormSchema = z.object({
   email: z.email({ error: 'Please enter a valid email.' }).trim(),
-  password: z
-    .string()
-    .trim()
-    .min(1, { error: 'Password is required.' }),
+  password: z.string().trim().min(1, { error: 'Password is required.' }),
 });
 
 export type FormState =
@@ -45,6 +42,14 @@ export type LoginFormState =
         email?: string[];
         password?: string[];
       };
-      error?: string;
+      message?: string;
     }
   | undefined;
+
+export type SessionPayload = { userId: number; expiresAt: Date };
+
+export type User = {
+  userId: number;
+  email: string;
+  name: string;
+};

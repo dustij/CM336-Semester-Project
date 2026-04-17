@@ -92,6 +92,11 @@ export function SignupForm() {
         </div>
 
         <div className="mt-[60px]">
+          {state?.message && (
+            <div className="mb-4">
+              <ErrorMessage message={state.message} />
+            </div>
+          )}
           <Button
             type="submit"
             disabled={pending}

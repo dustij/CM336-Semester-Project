@@ -1,44 +1,22 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import * as db from '@/db/db';
+import { queries } from '@/db/sql';
+import { LoginFormSchema, LoginFormState } from '@/lib/definitions';
+import { createSession } from '@/lib/session';
+import bcrypt from 'bcrypt';
+import { QueryResult, RowDataPacket } from 'mysql2';
 import { redirect } from 'next/navigation';
+import * as z from 'zod';
 
-import { AUTH_SESSION_COOKIE } from '@/lib/auth/session';
-import { LoginFormSchema, type LoginFormState } from '@/lib/definitions';
-
-export type AuthUserRecord = {
-  id: number | string;
-  email: string;
-  display_name: string;
+type UserLoginRow = RowDataPacket & {
+  id: number;
+  password_hash: string;
 };
 
-async function findUserByCredentials(input: {
-  email: string;
-  password: string;
-}): Promise<AuthUserRecord | null> {
-  const { email, password } = input;
-
-  if (!email || !password) {
-    return null;
-  }
-
-  // TODO: Replace this placeholder with a MySQL-backed lookup.
-  // Expected backend contract:
-  // 1. Accept the submitted email and password.
-  // 2. Call a MySQL function/query that checks whether the email and hashed
-  //    password match an existing user.
-  // 3. Return the matching user record when credentials are valid.
-  // 4. Return null when no user matches.
-  return {
-    id: email,
-    email,
-    display_name: 'User',
-  };
-}
-
-export async function loginAuth(
-  _previousState: LoginFormState,
-  formData: FormData,
+export async function login(
+  _state: LoginFormState,
+  formData: FormData
 ): Promise<LoginFormState> {
   const validatedFields = LoginFormSchema.safeParse({
     email: formData.get('email'),
@@ -47,28 +25,39 @@ export async function loginAuth(
 
   if (!validatedFields.success) {
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
+      errors: z.flattenError(validatedFields.error).fieldErrors,
     };
   }
 
   const { email, password } = validatedFields.data;
-  const user = await findUserByCredentials({ email, password });
 
-  if (!user) {
+  let result: QueryResult;
+  try {
+    result = await db.query(queries.selectUserCredentialsByEmail, [email]);
+  } catch (error) {
+    console.error('Failed to fetch user account for login.', error);
+
     return {
-      error: 'Invalid email or password.',
+      message: 'An error occurred while logging in.',
     };
   }
 
-  const cookieStore = await cookies();
+  const [user] = result as UserLoginRow[];
 
-  cookieStore.set(AUTH_SESSION_COOKIE, user.email, {
-    httpOnly: true,
-    maxAge: 60 * 60 * 24 * 7,
-    path: '/',
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
+  if (!user) {
+    return {
+      message: 'Invalid email or password.',
+    };
+  }
 
+  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+  if (!isPasswordValid) {
+    return {
+      message: 'Invalid email or password.',
+    };
+  }
+
+  await createSession(user.id);
   redirect('/');
 }

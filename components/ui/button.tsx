@@ -33,13 +33,14 @@ const buttonVariants = cva(
         'icon-sm':
           'size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg',
         'icon-lg': 'size-9',
+        'icon-xl': 'h-10 w-10',
       },
     },
     defaultVariants: {
       variant: 'default',
       size: 'default',
     },
-  },
+  }
 );
 
 function Button({
@@ -56,7 +57,7 @@ function Button({
 
   return (
     <Comp
-      data-slot='button'
+      data-slot="button"
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}

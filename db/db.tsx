@@ -19,6 +19,10 @@ async function getConnection() {
 
 export async function query(sql: string, values: SqlSafeValue[] = []) {
   const conn = await getConnection();
-  const [result] = await conn.execute(sql, values);
-  return result;
+  try {
+    const [result] = await conn.execute(sql, values);
+    return result;
+  } finally {
+    await conn.end();
+  }
 }

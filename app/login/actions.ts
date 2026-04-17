@@ -4,10 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { AUTH_SESSION_COOKIE } from '@/lib/auth/session';
-
-export type LoginState = {
-  error?: string;
-};
+import { LoginFormSchema, type LoginFormState } from '@/lib/definitions';
 
 export type AuthUserRecord = {
   id: number | string;
@@ -40,18 +37,21 @@ async function findUserByCredentials(input: {
 }
 
 export async function loginAuth(
-  _previousState: LoginState,
+  _previousState: LoginFormState,
   formData: FormData,
-): Promise<LoginState> {
-  const email = formData.get('email')?.toString().trim().toLowerCase() ?? '';
-  const password = formData.get('password')?.toString().trim() ?? '';
+): Promise<LoginFormState> {
+  const validatedFields = LoginFormSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+  });
 
-  if (!email || !password) {
+  if (!validatedFields.success) {
     return {
-      error: 'Email and password are required.',
+      errors: validatedFields.error.flatten().fieldErrors,
     };
   }
 
+  const { email, password } = validatedFields.data;
   const user = await findUserByCredentials({ email, password });
 
   if (!user) {

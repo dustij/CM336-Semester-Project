@@ -1,62 +1,66 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { type FormEvent, useState } from 'react';
 
+import { signup } from '@/app/signup/actions';
 import { AuthPageShell } from '@/components/auth/auth-page-shell';
-import { ErrorMessage } from '@/components/auth/error-message';
 import { PasswordField } from '@/components/auth/password-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useActionState, useState } from 'react';
+import { ErrorMessage } from './error-message';
 
 export function SignupForm() {
-  const router = useRouter();
+  const [state, action, pending] = useActionState(signup, undefined);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError('Please fill out every field.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-
-    setError('');
-    router.push('/login');
-  };
 
   return (
-    <AuthPageShell description='Lets create your free account'>
-      <form className='flex flex-1 flex-col mx-1' onSubmit={handleSubmit}>
-        <div className='mt-10 grid gap-4'>
-          <div className='grid gap-2'>
-            <Label htmlFor='email' className='text-[13px] text-slate-600'>
+    <AuthPageShell description="Lets create your free account">
+      <form className="mx-1 flex flex-1 flex-col" action={action}>
+        <div className="mt-10 grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name" className="text-[13px] text-slate-600">
+              Name
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="h-10 rounded-xl border-slate-200 shadow-none"
+            />
+            {state?.errors?.name && (
+              <ErrorMessage message={state.errors.name[0]} />
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="email" className="text-[13px] text-slate-600">
               Email
             </Label>
             <Input
-              id='email'
-              type='email'
+              id="email"
+              name="email"
+              type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className='h-10 rounded-xl border-slate-200 shadow-none'
+              className="h-10 rounded-xl border-slate-200 shadow-none"
             />
+            {state?.errors?.email && (
+              <ErrorMessage message={state.errors.email[0]} />
+            )}
           </div>
 
           <PasswordField
-            id='password'
-            label='Password'
+            id="password"
+            name="password"
+            label="Password"
             value={password}
             visible={passwordVisible}
             onChange={setPassword}
@@ -64,31 +68,45 @@ export function SignupForm() {
           />
 
           <PasswordField
-            id='confirm-password'
-            label='Confirm Password'
+            id="confirm-password"
+            name="confirmPassword"
+            label="Confirm Password"
             value={confirmPassword}
             visible={confirmPasswordVisible}
             onChange={setConfirmPassword}
             onToggle={() => setConfirmPasswordVisible((value) => !value)}
           />
+
+          {state?.errors?.password ? (
+            <div className="text-xs text-red-500">
+              <p>Password must:</p>
+              <ul>
+                {state.errors.password.map((error) => (
+                  <li key={error}>- {error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : state?.errors?.confirmPassword ? (
+            <ErrorMessage message={state.errors.confirmPassword[0]} />
+          ) : null}
         </div>
 
-        <div className='mt-[60px]'>
+        <div className="mt-[60px]">
           <Button
-            type='submit'
-            className='h-10 w-full rounded-xl cursor-pointer'
+            type="submit"
+            disabled={pending}
+            className="h-10 w-full cursor-pointer rounded-xl"
           >
-            Create Account
+            {pending ? 'Creating Account...' : 'Create Account'}
           </Button>
           <Button
-            type='button'
-            variant='secondary'
+            type="button"
+            variant="secondary"
             asChild
-            className='mt-4 h-10 w-full rounded-xl'
+            className="mt-4 h-10 w-full rounded-xl"
           >
-            <Link href='/login'>Back To Login</Link>
+            <Link href="/login">Back To Login</Link>
           </Button>
-          <ErrorMessage message={error} />
         </div>
       </form>
     </AuthPageShell>

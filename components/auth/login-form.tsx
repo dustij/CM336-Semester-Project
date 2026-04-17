@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export function LoginForm() {
-  const [state, formAction, pending] = useActionState(loginAuth, {});
+  const [state, formAction, pending] = useActionState(loginAuth, undefined);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -33,6 +33,9 @@ export function LoginForm() {
               onChange={(event) => setEmail(event.target.value)}
               className='h-10 rounded-xl border-slate-200 shadow-none'
             />
+            {state?.errors?.email && (
+              <ErrorMessage message={state.errors.email[0]} />
+            )}
           </div>
 
           <div className='grid gap-2'>
@@ -45,6 +48,9 @@ export function LoginForm() {
               onChange={setPassword}
               onToggle={() => setPasswordVisible((value) => !value)}
             />
+            {state?.errors?.password && (
+              <ErrorMessage message={state.errors.password[0]} />
+            )}
             <div className='flex justify-end'>
               <Button
                 type='button'
@@ -73,7 +79,7 @@ export function LoginForm() {
           >
             <Link href='/signup'>Sign Up</Link>
           </Button>
-          <ErrorMessage message={state.error ?? ''} />
+          <ErrorMessage message={state?.error ?? ''} />
         </div>
       </form>
     </AuthPageShell>

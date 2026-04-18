@@ -7,10 +7,12 @@ export default function layout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="bg-background min-h-screen">
-      <div className="bg-my-background mx-auto flex max-h-screen min-h-screen w-full max-w-[393px] flex-col">
+    <main className="bg-background h-dvh overflow-hidden">
+      <div className="bg-my-background mx-auto flex h-full w-full max-w-[393px] flex-col overflow-hidden">
         <Header />
-        <div className="bg-my-background flex-1">{children}</div>
+        <div className="bg-my-background flex min-h-0 flex-1 overflow-hidden">
+          {children}
+        </div>
         <Footer />
       </div>
     </main>

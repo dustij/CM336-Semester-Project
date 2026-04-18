@@ -10,6 +10,7 @@ import { PasswordField } from '@/components/auth/password-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 export function LoginForm() {
   const [state, formAction, pending] = useActionState(login, undefined);
@@ -31,7 +32,10 @@ export function LoginForm() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="h-10 rounded-xl border-slate-200 shadow-none"
+              className={cn(
+                'h-10 rounded-xl border-slate-200 shadow-none',
+                state?.errors?.email && 'border-red-500'
+              )}
             />
             {state?.errors?.email && (
               <ErrorMessage message={state.errors.email[0]} />
@@ -47,6 +51,7 @@ export function LoginForm() {
               visible={passwordVisible}
               onChange={setPassword}
               onToggle={() => setPasswordVisible((value) => !value)}
+              className={state?.errors?.password && 'border-red-500'}
             />
             {state?.errors?.password && (
               <ErrorMessage message={state.errors.password[0]} />

@@ -11,6 +11,8 @@
   --color-my-secondary: var(--my-secondary);
   --color-my-secondary-foreground: var(--my-secondary-foreground);
   --color-my-background: var(--my-background);
+  --color-body: var(--body);
+  --color-border: var(--border);
   /* Existing */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -61,6 +63,8 @@
   --my-secondary: var(--color-red-50);
   --my-secondary-foreground: var(--color-red-900);
   --my-background: var(--color-gray-50);
+  --body: var(--color-gray-600);
+  --border: var(--color-gray-200);
   /* Existing */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -102,6 +106,8 @@
   --my-secondary: var(--color-red-50);
   --my-secondary-foreground: var(--color-red-900);
   --my-background: var(--color-gray-50);
+  --body: var(--color-gray-600);
+  --border: var(--color-gray-200);
   /* Existing */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

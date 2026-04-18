@@ -1,10 +1,10 @@
-import { getUser } from '@/lib/dal';
+import { verifySession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 
 export default async function Page() {
-  const user = await getUser();
+  const { userId } = await verifySession();
 
-  if (!user) {
+  if (!userId) {
     redirect('/login');
   } else {
     redirect('/current');

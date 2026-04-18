@@ -1,5 +1,5 @@
 import { logout } from '@/app/(main)/actions';
-import { LogOutIcon, User } from 'lucide-react';
+import { LogOutIcon, UserCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -17,7 +17,7 @@ export const AvatarDropdown = () => {
           size="icon-xl"
           className="cursor-pointer rounded-full"
         >
-          <User className="text-body size-[24px]" />
+          <UserCircle className="text-body size-[24px]" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

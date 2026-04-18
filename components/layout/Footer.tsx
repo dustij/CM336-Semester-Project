@@ -44,19 +44,19 @@ export default function Footer() {
         href="/current"
         icon={Timer}
         label="Current"
-        isActive={pathname === '/current'}
+        isActive={pathname.startsWith('/current')}
       />
       <NavButton
         href="/mesocycles"
         icon={FolderOpen}
         label="Mesocycles"
-        isActive={pathname === '/mesocycles'}
+        isActive={pathname.startsWith('/mesocycles')}
       />
       <NavButton
         href="/exercises"
         icon={Dumbbell}
         label="Exercises"
-        isActive={pathname === '/exercises'}
+        isActive={pathname.startsWith('/exercises')}
       />
     </nav>
   );

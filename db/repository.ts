@@ -2,6 +2,11 @@ import 'server-only';
 
 import { cacheLife, cacheTag } from 'next/cache';
 
+export type MesocycleListItem = {
+  id: number;
+  title: string;
+};
+
 export async function getCurrentMesocycle(userId: number) {
   'use cache';
   cacheTag(`mesocycles:user:${userId}`);
@@ -9,7 +14,9 @@ export async function getCurrentMesocycle(userId: number) {
   return null;
 }
 
-export async function getMesocycleList(userId: number) {
+export async function getMesocycleList(
+  userId: number,
+): Promise<MesocycleListItem[]> {
   'use cache';
   cacheTag(`mesocycles:user:${userId}`);
   cacheLife('max'); // max because we manually invalidate after user adds a new mesocycle

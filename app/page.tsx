@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 async function RedirectBySession() {
   await verifySession();
   redirect('/current');
+  return null;
 }
 
 export default function Page() {

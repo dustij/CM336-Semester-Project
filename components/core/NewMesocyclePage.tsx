@@ -12,6 +12,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from '../ui/combobox';
+import MuscleGroupDialog from './MuscleGroupDialog';
 
 type MesocycleDay = {
   dayOfWeek:
@@ -35,10 +36,16 @@ type PlannedExercise = {
   muscleGroup: string;
 };
 
-export default function NewMesocyclePage() {
+type NewMesocyclePageProps = {
+  muscleGroups: string[];
+};
+
+export default function NewMesocyclePage({
+  muscleGroups,
+}: NewMesocyclePageProps) {
   // TODO: implement logic to enforce unique dayOfWeek and limit days to max 7
   const router = useRouter();
-  const [mesocycleDays, setMesocycleDays] = useState<MesocycleDay[]>([
+  const [mesocycleDays] = useState<MesocycleDay[]>([
     { dayOfWeek: 'Monday', dayOrder: 0, plannedExercises: [] },
   ]);
 
@@ -103,14 +110,7 @@ export default function NewMesocyclePage() {
             </div>
             <div className="bg-gray-100 p-2.5">
               <div className="border-border flex h-[60px] items-center justify-center rounded-[8px] border-2 border-dashed">
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  className="text-body text-md size-full"
-                >
-                  <Plus className="size-[20px]" />
-                  Add a muscle group
-                </Button>
+                <MuscleGroupDialog muscleGroups={muscleGroups} />
               </div>
             </div>
           </div>

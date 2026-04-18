@@ -1,4 +1,4 @@
-import CurrentPage from '@/components/main/CurrentPage';
+import CurrentPage from '@/components/core/CurrentPage';
 import { verifySession } from '@/lib/session';
 
 export default async function Current() {

@@ -1,12 +1,17 @@
 import { verifySession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default async function Page() {
-  const { userId } = await verifySession();
+async function RedirectBySession() {
+  await verifySession();
+  redirect('/current');
+  return null;
+}
 
-  if (!userId) {
-    redirect('/login');
-  } else {
-    redirect('/current');
-  }
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <RedirectBySession />
+    </Suspense>
+  );
 }

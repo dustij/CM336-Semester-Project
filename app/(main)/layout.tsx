@@ -1,11 +1,13 @@
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
+import { verifySession } from '@/lib/session';
+import { Suspense } from 'react';
 
-export default function layout({
+function MainShell({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children?: React.ReactNode;
+}) {
   return (
     <main className="bg-background h-dvh overflow-hidden">
       <div className="bg-my-background mx-auto flex h-full w-full max-w-[393px] flex-col overflow-hidden">
@@ -16,5 +18,27 @@ export default function layout({
         <Footer />
       </div>
     </main>
+  );
+}
+
+async function AuthenticatedMainLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  await verifySession();
+
+  return <MainShell>{children}</MainShell>;
+}
+
+export default function layout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <Suspense fallback={<MainShell />}>
+      <AuthenticatedMainLayout>{children}</AuthenticatedMainLayout>
+    </Suspense>
   );
 }

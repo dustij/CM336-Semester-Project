@@ -9,7 +9,7 @@ export default async function MesocyclesPage({ userId }: { userId: number }) {
     <main className="bg-my-background flex flex-1 flex-col items-center justify-center">
       <div className="flex w-full items-center px-5 py-3.5">
         <div className="flex-1">
-          <p className="text-lg font-semibold">Mesocycles</p>
+          <p className="text-body text-lg font-semibold">Mesocycles</p>
         </div>
         <Link href="/mesocycles/new">
           <Button size="lg" className="min-w-20">

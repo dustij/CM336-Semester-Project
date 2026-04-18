@@ -1,4 +1,4 @@
-import ExercisesPage from '@/components/main/ExercisesPage';
+import ExercisesPage from '@/components/core/ExercisesPage';
 import { verifySession } from '@/lib/session';
 
 export default async function Exercises() {

@@ -1,18 +1,13 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import { ArrowLeft, Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '../ui/button';
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from '../ui/combobox';
+import DayComboBox from './DayComboBox';
 import MuscleGroupDialog from './MuscleGroupDialog';
+import PlannedExerciseCard from './PlannedExerciseCard';
 
 type MesocycleDay = {
   dayOfWeek:
@@ -45,9 +40,59 @@ export default function NewMesocyclePage({
 }: NewMesocyclePageProps) {
   // TODO: implement logic to enforce unique dayOfWeek and limit days to max 7
   const router = useRouter();
-  const [mesocycleDays] = useState<MesocycleDay[]>([
+  const [mesocycleDays, setMesocycleDays] = useState<MesocycleDay[]>([
     { dayOfWeek: 'Monday', dayOrder: 0, plannedExercises: [] },
   ]);
+
+  const addMuscleGroupToDay = (dayIndex: number, muscleGroup: string) => {
+    setMesocycleDays((prev) =>
+      prev.map((day, index) => {
+        if (index !== dayIndex) {
+          return day;
+        }
+
+        return {
+          ...day,
+          plannedExercises: [
+            ...day.plannedExercises,
+            {
+              exerciseId: 0,
+              exerciseName: muscleGroup,
+              exerciseOrder: day.plannedExercises.length,
+              exerciseType: '',
+              equipment: '',
+              muscleGroup,
+            },
+          ],
+        };
+      })
+    );
+  };
+
+  const removePlannedExerciseFromDay = (
+    dayIndex: number,
+    plannedExerciseIndex: number
+  ) => {
+    setMesocycleDays((prev) =>
+      prev.map((day, index) => {
+        if (index !== dayIndex) {
+          return day;
+        }
+
+        return {
+          ...day,
+          plannedExercises: day.plannedExercises
+            .filter(
+              (_, exerciseIndex) => exerciseIndex !== plannedExerciseIndex
+            )
+            .map((exercise, exerciseOrder) => ({
+              ...exercise,
+              exerciseOrder,
+            })),
+        };
+      })
+    );
+  };
 
   return (
     <main className="bg-my-background flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -71,36 +116,7 @@ export default function NewMesocyclePage({
           <div key={mDay.dayOfWeek} className="min-w-[300px]">
             <div className="flex items-center justify-between bg-white p-2.5">
               <div className="h-[40px] max-w-38">
-                <Combobox
-                  items={[
-                    'Monday',
-                    'Tuesday',
-                    'Wednesday',
-                    'Thursday',
-                    'Friday',
-                    'Saturday',
-                    'Sunday',
-                  ]}
-                >
-                  <ComboboxInput
-                    placeholder="Choose..."
-                    className="text-body h-full"
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>No day found.</ComboboxEmpty>
-                    <ComboboxList>
-                      {(item) => (
-                        <ComboboxItem
-                          key={item}
-                          value={item}
-                          className="text-md text-body"
-                        >
-                          {item}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
+                <DayComboBox />
               </div>
               <div>
                 <Button variant="ghost" size="icon-xl" className="text-red-500">
@@ -108,9 +124,30 @@ export default function NewMesocyclePage({
                 </Button>
               </div>
             </div>
+            {/* List planned exercises */}
+            <div
+              className={cn(
+                'flex flex-col gap-2.5 bg-gray-100 px-2.5',
+                mDay.plannedExercises.length > 0 && 'pt-2.5'
+              )}
+            >
+              {mDay.plannedExercises.map((planned, plannedIndex) => (
+                <PlannedExerciseCard
+                  muscleGroup={planned.muscleGroup}
+                  key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
+                  onRemove={() => removePlannedExerciseFromDay(i, plannedIndex)}
+                />
+              ))}
+            </div>
+            {/* Add muscle group */}
             <div className="bg-gray-100 p-2.5">
               <div className="border-border flex h-[60px] items-center justify-center rounded-[8px] border-2 border-dashed">
-                <MuscleGroupDialog muscleGroups={muscleGroups} />
+                <MuscleGroupDialog
+                  muscleGroups={muscleGroups}
+                  onSelect={(muscleGroup) =>
+                    addMuscleGroupToDay(i, muscleGroup)
+                  }
+                />
               </div>
             </div>
           </div>

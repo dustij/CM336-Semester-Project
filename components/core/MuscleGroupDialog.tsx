@@ -1,6 +1,7 @@
 'use client';
 
 import { Plus } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '../ui/button';
 import {
   Dialog,
@@ -13,13 +14,22 @@ import {
 
 type MuscleGroupDialogProps = {
   muscleGroups: string[];
+  onSelect: (muscleGroup: string) => void;
 };
 
 export default function MuscleGroupDialog({
   muscleGroups,
+  onSelect,
 }: MuscleGroupDialogProps) {
+  const [open, setOpen] = useState(false);
+
+  const handleSelect = (muscleGroup: string) => {
+    onSelect(muscleGroup);
+    setOpen(false);
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
@@ -33,11 +43,19 @@ export default function MuscleGroupDialog({
       <DialogContent>
         <DialogHeader className="text-body">
           <DialogTitle>Choose a muscle group</DialogTitle>
-          <DialogDescription></DialogDescription>
+          <DialogDescription>
+            Select a muscle group to add it to this day&apos;s planned
+            exercises.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-1">
           {muscleGroups.map((muscleGroup) => (
-            <Button key={muscleGroup} variant="secondary" size="lg">
+            <Button
+              key={muscleGroup}
+              variant="secondary"
+              size="lg"
+              onClick={() => handleSelect(muscleGroup)}
+            >
               {muscleGroup}
             </Button>
           ))}

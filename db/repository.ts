@@ -1,6 +1,10 @@
 import 'server-only';
 
-import type { ExerciseListItem, MesocycleListItem } from '@/lib/core/types';
+import type {
+  ExerciseListItem,
+  ExercisesByMuscleGroup,
+  MesocycleListItem,
+} from '@/lib/core/types';
 import { cacheLife, cacheTag } from 'next/cache';
 
 export async function getCurrentMesocycle(userId: number) {
@@ -35,4 +39,17 @@ export async function getExerciseListByMuscleGroup(
   cacheTag(`mesocycles:exercisesByMuscleGroup:${muscleGroup}`);
   cacheLife('days'); // days because exercises may be updated but not often (IMPORTANT: we may need to change this later)
   return [{ id: 0, name: 'Bench Press (incline)', equipment: 'Barbell' }];
+}
+
+export async function getExerciseListsByMuscleGroup(
+  muscleGroups: string[]
+): Promise<ExercisesByMuscleGroup> {
+  const exerciseEntries = await Promise.all(
+    muscleGroups.map(async (muscleGroup) => [
+      muscleGroup,
+      await getExerciseListByMuscleGroup(muscleGroup),
+    ])
+  );
+
+  return Object.fromEntries(exerciseEntries);
 }

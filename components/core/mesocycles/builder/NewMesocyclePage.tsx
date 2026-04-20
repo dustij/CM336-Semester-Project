@@ -1,24 +1,27 @@
 'use client';
 
+import DayComboBox from '@/components/core/shared/DayComboBox';
 import { Button } from '@/components/ui/button';
+import type { ExercisesByMuscleGroup } from '@/lib/core/types';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import MuscleGroupDialog from './MuscleGroupDialog';
+import PlannedExerciseCard from './PlannedExerciseCard';
 import {
   addMuscleGroupToDay,
   removePlannedExerciseFromDay,
   type MesocycleDayDraft,
 } from './state';
-import DayComboBox from './DayComboBox';
-import MuscleGroupDialog from './MuscleGroupDialog';
-import PlannedExerciseCard from './PlannedExerciseCard';
 
 type NewMesocyclePageProps = {
   muscleGroups: string[];
+  exercisesByMuscleGroup: ExercisesByMuscleGroup;
 };
 
 export default function NewMesocyclePage({
+  exercisesByMuscleGroup,
   muscleGroups,
 }: NewMesocyclePageProps) {
   // TODO: implement logic to enforce unique dayOfWeek and limit days to max 7
@@ -81,6 +84,7 @@ export default function NewMesocyclePage({
             >
               {mDay.plannedExercises.map((planned, plannedIndex) => (
                 <PlannedExerciseCard
+                  exercises={exercisesByMuscleGroup[planned.muscleGroup] ?? []}
                   muscleGroup={planned.muscleGroup}
                   key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
                   onRemove={() =>

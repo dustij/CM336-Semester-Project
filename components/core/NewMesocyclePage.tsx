@@ -7,29 +7,12 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import DayComboBox from './DayComboBox';
 import MuscleGroupDialog from './MuscleGroupDialog';
+import {
+  addMuscleGroupToDay,
+  removePlannedExerciseFromDay,
+  type MesocycleDay,
+} from './newMesocyclePageState';
 import PlannedExerciseCard from './PlannedExerciseCard';
-
-type MesocycleDay = {
-  dayOfWeek:
-    | 'Monday'
-    | 'Tuesday'
-    | 'Wednesday'
-    | 'Thursday'
-    | 'Friday'
-    | 'Saturday'
-    | 'Sunday';
-  dayOrder: number;
-  plannedExercises: PlannedExercise[];
-};
-
-type PlannedExercise = {
-  exerciseId: number;
-  exerciseName: string;
-  exerciseOrder: number;
-  exerciseType: string;
-  equipment: string;
-  muscleGroup: string;
-};
 
 type NewMesocyclePageProps = {
   muscleGroups: string[];
@@ -44,53 +27,18 @@ export default function NewMesocyclePage({
     { dayOfWeek: 'Monday', dayOrder: 0, plannedExercises: [] },
   ]);
 
-  const addMuscleGroupToDay = (dayIndex: number, muscleGroup: string) => {
+  const handleAddMuscleGroupToDay = (dayIndex: number, muscleGroup: string) => {
     setMesocycleDays((prev) =>
-      prev.map((day, index) => {
-        if (index !== dayIndex) {
-          return day;
-        }
-
-        return {
-          ...day,
-          plannedExercises: [
-            ...day.plannedExercises,
-            {
-              exerciseId: 0,
-              exerciseName: muscleGroup,
-              exerciseOrder: day.plannedExercises.length,
-              exerciseType: '',
-              equipment: '',
-              muscleGroup,
-            },
-          ],
-        };
-      })
+      addMuscleGroupToDay(prev, dayIndex, muscleGroup)
     );
   };
 
-  const removePlannedExerciseFromDay = (
+  const handleRemovePlannedExerciseFromDay = (
     dayIndex: number,
     plannedExerciseIndex: number
   ) => {
     setMesocycleDays((prev) =>
-      prev.map((day, index) => {
-        if (index !== dayIndex) {
-          return day;
-        }
-
-        return {
-          ...day,
-          plannedExercises: day.plannedExercises
-            .filter(
-              (_, exerciseIndex) => exerciseIndex !== plannedExerciseIndex
-            )
-            .map((exercise, exerciseOrder) => ({
-              ...exercise,
-              exerciseOrder,
-            })),
-        };
-      })
+      removePlannedExerciseFromDay(prev, dayIndex, plannedExerciseIndex)
     );
   };
 
@@ -135,7 +83,9 @@ export default function NewMesocyclePage({
                 <PlannedExerciseCard
                   muscleGroup={planned.muscleGroup}
                   key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
-                  onRemove={() => removePlannedExerciseFromDay(i, plannedIndex)}
+                  onRemove={() =>
+                    handleRemovePlannedExerciseFromDay(i, plannedIndex)
+                  }
                 />
               ))}
             </div>
@@ -145,7 +95,7 @@ export default function NewMesocyclePage({
                 <MuscleGroupDialog
                   muscleGroups={muscleGroups}
                   onSelect={(muscleGroup) =>
-                    addMuscleGroupToDay(i, muscleGroup)
+                    handleAddMuscleGroupToDay(i, muscleGroup)
                   }
                 />
               </div>

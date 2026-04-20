@@ -7,6 +7,12 @@ export type MesocycleListItem = {
   title: string;
 };
 
+export type ExerciseListItem = {
+  id: number;
+  name: string;
+  equipment: string;
+};
+
 export async function getCurrentMesocycle(userId: number) {
   'use cache';
   cacheTag(`mesocycles:user:${userId}`);
@@ -15,7 +21,7 @@ export async function getCurrentMesocycle(userId: number) {
 }
 
 export async function getMesocycleList(
-  userId: number,
+  userId: number
 ): Promise<MesocycleListItem[]> {
   'use cache';
   cacheTag(`mesocycles:user:${userId}`);
@@ -26,7 +32,17 @@ export async function getMesocycleList(
 export async function getMuscleGroupList() {
   'use cache';
   cacheTag(`mesocycles:muscleGroups`);
-  cacheLife('max'); // max because muscle groups will only change if we (the developers) add more to the database
+  cacheLife('days'); // days because muscle groups may be updated but not often
 
   return ['Chest', 'Back'];
+}
+
+export async function getExerciseListByMuscleGroup(
+  muscleGroup: string
+): Promise<ExerciseListItem[]> {
+  'use cache';
+  // When we add feature user-created exercises, we will need to manually invalidate
+  cacheTag(`mesocycles:exercisesByMuscleGroup:${muscleGroup}`);
+  cacheLife('days'); // days because exercises may be updated but not often (IMPORTANT: we may need to change this later)
+  return [{ id: 0, name: 'Bench Press (incline)', equipment: 'Barbell' }];
 }

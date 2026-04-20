@@ -16,10 +16,10 @@ export function AuthPageShell({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto flex min-h-screen w-full max-w-[393px] flex-col px-6 py-6">
-        <Card className="flex flex-1 border-none py-0 shadow-none ring-0">
-          <CardHeader className="px-0 pt-32">
+    <main className="h-dvh overflow-y-auto bg-background">
+      <div className="mx-auto flex min-h-full w-full max-w-[393px] flex-col px-6 py-4">
+        <Card className="my-auto w-full border-none py-0 shadow-none ring-0">
+          <CardHeader className="px-0 pt-0">
             <CardTitle className="text-center text-[2rem] font-semibold tracking-[-0.03em] text-slate-950">
               Mesocycle Planner
             </CardTitle>
@@ -27,7 +27,7 @@ export function AuthPageShell({
               {description}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-1 flex-col px-0">
+          <CardContent className="flex flex-col px-0">
             {children}
           </CardContent>
         </Card>

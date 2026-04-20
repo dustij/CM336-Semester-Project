@@ -1,17 +1,7 @@
 import 'server-only';
 
+import type { ExerciseListItem, MesocycleListItem } from '@/lib/core/types';
 import { cacheLife, cacheTag } from 'next/cache';
-
-export type MesocycleListItem = {
-  id: number;
-  title: string;
-};
-
-export type ExerciseListItem = {
-  id: number;
-  name: string;
-  equipment: string;
-};
 
 export async function getCurrentMesocycle(userId: number) {
   'use cache';

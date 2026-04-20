@@ -5,20 +5,23 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-} from '../ui/combobox';
+} from '@/components/ui/combobox';
+import { Weekday } from '@/lib/core/types';
 
 export default function DayComboBox() {
   return (
     <Combobox
-      items={[
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday',
-        'Sunday',
-      ]}
+      items={
+        [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ] as Weekday[]
+      }
     >
       <ComboboxInput placeholder="Choose day..." className="text-body h-full" />
       <ComboboxContent>

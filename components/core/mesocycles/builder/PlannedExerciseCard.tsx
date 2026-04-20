@@ -1,6 +1,6 @@
 import { Trash } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Combobox, ComboboxInput } from '../ui/combobox';
+import { Button } from '@/components/ui/button';
+import { Combobox, ComboboxInput } from '@/components/ui/combobox';
 
 type PlannedExerciseCardProps = {
   muscleGroup: string;

@@ -1,17 +1,17 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '../ui/button';
-import DayComboBox from './DayComboBox';
-import MuscleGroupDialog from './MuscleGroupDialog';
 import {
   addMuscleGroupToDay,
   removePlannedExerciseFromDay,
-  type MesocycleDay,
-} from './newMesocyclePageState';
+  type MesocycleDayDraft,
+} from './state';
+import DayComboBox from './DayComboBox';
+import MuscleGroupDialog from './MuscleGroupDialog';
 import PlannedExerciseCard from './PlannedExerciseCard';
 
 type NewMesocyclePageProps = {
@@ -23,7 +23,7 @@ export default function NewMesocyclePage({
 }: NewMesocyclePageProps) {
   // TODO: implement logic to enforce unique dayOfWeek and limit days to max 7
   const router = useRouter();
-  const [mesocycleDays, setMesocycleDays] = useState<MesocycleDay[]>([
+  const [mesocycleDays, setMesocycleDays] = useState<MesocycleDayDraft[]>([
     { dayOfWeek: 'Monday', dayOrder: 0, plannedExercises: [] },
   ]);
 

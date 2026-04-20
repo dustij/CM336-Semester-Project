@@ -1,27 +1,19 @@
-export type MesocycleDay = {
-  dayOfWeek:
-    | 'Monday'
-    | 'Tuesday'
-    | 'Wednesday'
-    | 'Thursday'
-    | 'Friday'
-    | 'Saturday'
-    | 'Sunday';
-  dayOrder: number;
-  plannedExercises: PlannedExercise[];
-};
+import type { ExerciseListItem, Weekday } from '@/lib/core/types';
 
-export type PlannedExercise = {
-  exerciseId: number;
-  exerciseName: string;
+export type PlannedExerciseDraft = ExerciseListItem & {
   exerciseOrder: number;
   exerciseType: string;
-  equipment: string;
   muscleGroup: string;
 };
 
+export type MesocycleDayDraft = {
+  dayOfWeek: Weekday;
+  dayOrder: number;
+  plannedExercises: PlannedExerciseDraft[];
+};
+
 export function addMuscleGroupToDay(
-  mesocycleDays: MesocycleDay[],
+  mesocycleDays: MesocycleDayDraft[],
   dayIndex: number,
   muscleGroup: string
 ) {
@@ -35,11 +27,11 @@ export function addMuscleGroupToDay(
       plannedExercises: [
         ...day.plannedExercises,
         {
-          exerciseId: 0,
-          exerciseName: muscleGroup,
+          id: 0,
+          name: muscleGroup,
+          equipment: '',
           exerciseOrder: day.plannedExercises.length,
           exerciseType: '',
-          equipment: '',
           muscleGroup,
         },
       ],
@@ -48,7 +40,7 @@ export function addMuscleGroupToDay(
 }
 
 export function removePlannedExerciseFromDay(
-  mesocycleDays: MesocycleDay[],
+  mesocycleDays: MesocycleDayDraft[],
   dayIndex: number,
   plannedExerciseIndex: number
 ) {

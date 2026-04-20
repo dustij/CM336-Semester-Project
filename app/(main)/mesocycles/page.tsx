@@ -1,4 +1,4 @@
-import MesocyclesPage from '@/components/core/MesocyclesPage';
+import MesocyclesPage from '@/components/core/mesocycles/MesocyclesPage';
 import { verifySession } from '@/lib/session';
 
 export default async function Mesocycles() {

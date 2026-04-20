@@ -4,14 +4,14 @@ import test from 'node:test';
 import {
   addMuscleGroupToDay,
   removePlannedExerciseFromDay,
-} from '../components/core/newMesocyclePageState.ts';
+} from '../components/core/mesocycles/builder/state.ts';
 
 const plannedExercise = (muscleGroup, exerciseOrder) => ({
-  exerciseId: exerciseOrder,
-  exerciseName: muscleGroup,
+  id: exerciseOrder,
+  name: muscleGroup,
+  equipment: '',
   exerciseOrder,
   exerciseType: '',
-  equipment: '',
   muscleGroup,
 });
 
@@ -38,11 +38,11 @@ test('addMuscleGroupToDay appends a planned exercise with the next exerciseOrder
     plannedExercise('Chest', 0),
     plannedExercise('Shoulders', 1),
     {
-      exerciseId: 0,
-      exerciseName: 'Triceps',
+      id: 0,
+      name: 'Triceps',
+      equipment: '',
       exerciseOrder: 2,
       exerciseType: '',
-      equipment: '',
       muscleGroup: 'Triceps',
     },
   ]);

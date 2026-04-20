@@ -1,6 +1,6 @@
 import { getCurrentMesocycle } from '@/db/repository';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Button } from '../ui/button';
 
 export default async function CurrentPage({ userId }: { userId: number }) {
   const currentMesocycle = await getCurrentMesocycle(userId);

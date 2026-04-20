@@ -2,7 +2,7 @@
 
 import * as db from '@/db/db';
 import { queries } from '@/db/sql';
-import { LoginFormSchema, LoginFormState } from '@/lib/definitions';
+import { LoginFormSchema, LoginFormState } from '@/lib/core/form-definitions';
 import { createSession } from '@/lib/session';
 import bcrypt from 'bcrypt';
 import { QueryResult, RowDataPacket } from 'mysql2';

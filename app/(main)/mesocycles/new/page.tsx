@@ -1,10 +1,18 @@
-import NewMesocyclePage from '@/components/core/NewMesocyclePage';
-import { getMuscleGroupList } from '@/db/repository';
-import { verifySession } from '@/lib/session';
+import NewMesocyclePage from '@/components/core/mesocycles/builder/NewMesocyclePage';
+import {
+  getExerciseListsByMuscleGroup,
+  getMuscleGroupList,
+} from '@/db/repository';
 
 export default async function New() {
-  await verifySession();
   const muscleGroups = await getMuscleGroupList();
+  const exercisesByMuscleGroup =
+    await getExerciseListsByMuscleGroup(muscleGroups);
 
-  return <NewMesocyclePage muscleGroups={muscleGroups} />;
+  return (
+    <NewMesocyclePage
+      muscleGroups={muscleGroups}
+      exercisesByMuscleGroup={exercisesByMuscleGroup}
+    />
+  );
 }

@@ -1,96 +1,47 @@
 'use client';
 
+import DayComboBox from '@/components/core/shared/DayComboBox';
+import { Button } from '@/components/ui/button';
+import type { ExercisesByMuscleGroup } from '@/lib/core/types';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '../ui/button';
-import DayComboBox from './DayComboBox';
 import MuscleGroupDialog from './MuscleGroupDialog';
 import PlannedExerciseCard from './PlannedExerciseCard';
-
-type MesocycleDay = {
-  dayOfWeek:
-    | 'Monday'
-    | 'Tuesday'
-    | 'Wednesday'
-    | 'Thursday'
-    | 'Friday'
-    | 'Saturday'
-    | 'Sunday';
-  dayOrder: number;
-  plannedExercises: PlannedExercise[];
-};
-
-type PlannedExercise = {
-  exerciseId: number;
-  exerciseName: string;
-  exerciseOrder: number;
-  exerciseType: string;
-  equipment: string;
-  muscleGroup: string;
-};
+import {
+  addMuscleGroupToDay,
+  removePlannedExerciseFromDay,
+  type MesocycleDayDraft,
+} from './state';
 
 type NewMesocyclePageProps = {
   muscleGroups: string[];
+  exercisesByMuscleGroup: ExercisesByMuscleGroup;
 };
 
 export default function NewMesocyclePage({
+  exercisesByMuscleGroup,
   muscleGroups,
 }: NewMesocyclePageProps) {
   // TODO: implement logic to enforce unique dayOfWeek and limit days to max 7
   const router = useRouter();
-  const [mesocycleDays, setMesocycleDays] = useState<MesocycleDay[]>([
+  const [mesocycleDays, setMesocycleDays] = useState<MesocycleDayDraft[]>([
     { dayOfWeek: 'Monday', dayOrder: 0, plannedExercises: [] },
   ]);
 
-  const addMuscleGroupToDay = (dayIndex: number, muscleGroup: string) => {
+  const handleAddMuscleGroupToDay = (dayIndex: number, muscleGroup: string) => {
     setMesocycleDays((prev) =>
-      prev.map((day, index) => {
-        if (index !== dayIndex) {
-          return day;
-        }
-
-        return {
-          ...day,
-          plannedExercises: [
-            ...day.plannedExercises,
-            {
-              exerciseId: 0,
-              exerciseName: muscleGroup,
-              exerciseOrder: day.plannedExercises.length,
-              exerciseType: '',
-              equipment: '',
-              muscleGroup,
-            },
-          ],
-        };
-      })
+      addMuscleGroupToDay(prev, dayIndex, muscleGroup)
     );
   };
 
-  const removePlannedExerciseFromDay = (
+  const handleRemovePlannedExerciseFromDay = (
     dayIndex: number,
     plannedExerciseIndex: number
   ) => {
     setMesocycleDays((prev) =>
-      prev.map((day, index) => {
-        if (index !== dayIndex) {
-          return day;
-        }
-
-        return {
-          ...day,
-          plannedExercises: day.plannedExercises
-            .filter(
-              (_, exerciseIndex) => exerciseIndex !== plannedExerciseIndex
-            )
-            .map((exercise, exerciseOrder) => ({
-              ...exercise,
-              exerciseOrder,
-            })),
-        };
-      })
+      removePlannedExerciseFromDay(prev, dayIndex, plannedExerciseIndex)
     );
   };
 
@@ -133,9 +84,12 @@ export default function NewMesocyclePage({
             >
               {mDay.plannedExercises.map((planned, plannedIndex) => (
                 <PlannedExerciseCard
+                  exercises={exercisesByMuscleGroup[planned.muscleGroup] ?? []}
                   muscleGroup={planned.muscleGroup}
                   key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
-                  onRemove={() => removePlannedExerciseFromDay(i, plannedIndex)}
+                  onRemove={() =>
+                    handleRemovePlannedExerciseFromDay(i, plannedIndex)
+                  }
                 />
               ))}
             </div>
@@ -145,7 +99,7 @@ export default function NewMesocyclePage({
                 <MuscleGroupDialog
                   muscleGroups={muscleGroups}
                   onSelect={(muscleGroup) =>
-                    addMuscleGroupToDay(i, muscleGroup)
+                    handleAddMuscleGroupToDay(i, muscleGroup)
                   }
                 />
               </div>

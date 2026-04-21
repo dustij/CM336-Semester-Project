@@ -45,9 +45,3 @@ export type LoginFormState =
       message?: string;
     }
   | undefined;
-
-export type User = {
-  userId: number;
-  email: string;
-  name: string;
-};

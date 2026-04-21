@@ -1,8 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../ui/dialog';
+} from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
 
 type MuscleGroupDialogProps = {
   muscleGroups: string[];

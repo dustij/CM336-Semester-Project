@@ -5,7 +5,7 @@ import { queries } from '@/db/sql';
 import bcrypt from 'bcrypt';
 import * as z from 'zod';
 
-import { FormState, SignupFormSchema } from '@/lib/definitions';
+import { FormState, SignupFormSchema } from '@/lib/core/form-definitions';
 import { createSession } from '@/lib/session';
 import { QueryResult, ResultSetHeader } from 'mysql2';
 import { redirect } from 'next/navigation';

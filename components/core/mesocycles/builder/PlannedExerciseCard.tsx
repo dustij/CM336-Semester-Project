@@ -1,12 +1,15 @@
+import ExerciseComboBox from '@/components/core/shared/ExerciseComboBox';
+import { Button } from '@/components/ui/button';
+import type { ExerciseListItem } from '@/lib/core/types';
 import { Trash } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Combobox, ComboboxInput } from '../ui/combobox';
 
 type PlannedExerciseCardProps = {
+  exercises: ExerciseListItem[];
   muscleGroup: string;
   onRemove: () => void;
 };
 export default function PlannedExerciseCard({
+  exercises,
   muscleGroup,
   onRemove,
 }: PlannedExerciseCardProps) {
@@ -26,12 +29,7 @@ export default function PlannedExerciseCard({
         </Button>
       </div>
       <div>
-        <Combobox>
-          <ComboboxInput
-            placeholder="Choose exercise..."
-            className="text-body h-full"
-          />
-        </Combobox>
+        <ExerciseComboBox exercises={exercises} />
       </div>
     </div>
   );

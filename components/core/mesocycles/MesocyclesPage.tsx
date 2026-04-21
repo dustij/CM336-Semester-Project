@@ -1,7 +1,7 @@
+import { Button } from '@/components/ui/button';
 import { getMesocycleList } from '@/db/repository';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '../ui/button';
 
 export default async function MesocyclesPage({ userId }: { userId: number }) {
   const mesocycleList = await getMesocycleList(userId);

@@ -27,7 +27,7 @@ export function SignupForm() {
         <div className="mt-10 grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="name" className="text-[13px] text-slate-600">
-              Name
+              First Name
             </Label>
             <Input
               id="name"

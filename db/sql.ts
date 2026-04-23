@@ -26,7 +26,7 @@ export const queries = {
   LIMIT 1
   `,
 
-  // Luke's Potential Statements
+  // Luke's Potential Statements!
   createMesocycleTemplateTable: `
   CREATE TABLE IF NOT EXISTS mesocycle_template (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

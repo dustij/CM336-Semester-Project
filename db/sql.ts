@@ -26,7 +26,7 @@ export const queries = {
   LIMIT 1
   `,
 
-  // Luke's Potential Statements!
+  // Mesocycle Template Statements!
   createMesocycleTemplateTable: `
   CREATE TABLE IF NOT EXISTS mesocycle_template (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -34,10 +34,27 @@ export const queries = {
     description TEXT NULL
     duration_weeks INT NOT NULL
     is_favorite BOOLEAN NOT NULL
-    `,
+    )`,
   insertMesocycleTemplate: `
   INSERT INTO mesocycle_template (title, description, duration_weeks, is_favorite)
   VALUES(?, ?, ?, ?)
   `,
-  
+  selectTemplatesByFavorite: `
+  SELECT id, title, duration_weeks
+  FROM mesocycle_template
+  WHERE is_favorite = TRUE
+  `,
+  selectTemplateById: `
+  SELECT *
+  FROM mesocycle_template
+  WHERE id = ?
+  LIMIT 1
+  `,
+
+  // User Template Statments
+  createUserTemplateTable: `
+  CREATE TABLE IF NOT EXISTS user_template (
+    user_id INT
+    template_id INT
+  ) `
 };

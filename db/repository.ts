@@ -1,11 +1,41 @@
 import 'server-only';
 
+import * as db from '@/db/db';
+import { queries } from '@/db/sql';
 import type {
+  ExerciseCatalogListItem,
   ExerciseListItem,
   ExercisesByMuscleGroup,
   MesocycleListItem,
 } from '@/lib/core/types';
+import { RowDataPacket } from 'mysql2';
 import { cacheLife, cacheTag } from 'next/cache';
+
+type ExerciseCatalogRow = RowDataPacket & {
+  id: number;
+  name: string;
+  equipment: string | null;
+  muscleGroup: string | null;
+};
+
+const EXERCISE_CATALOG_FALLBACK: ExerciseCatalogListItem[] = [
+  {
+    id: 1,
+    name: 'Bench Press (Incline)',
+    equipment: 'Barbell',
+    muscleGroup: 'Chest',
+  },
+  {
+    id: 2,
+    name: 'Dumbbell Skullcrusher',
+    equipment: 'Dumbbell',
+    muscleGroup: 'Triceps',
+  },
+];
+
+function hasDatabaseConfig() {
+  return Boolean(process.env['MYSQL_URI']);
+}
 
 export async function getCurrentMesocycle(userId: number) {
   'use cache';
@@ -52,4 +82,30 @@ export async function getExerciseListsByMuscleGroup(
   );
 
   return Object.fromEntries(exerciseEntries);
+}
+
+export async function getExerciseCatalog(): Promise<ExerciseCatalogListItem[]> {
+  'use cache';
+  cacheTag('exercises:list');
+  cacheLife('days');
+
+  if (!hasDatabaseConfig()) {
+    return EXERCISE_CATALOG_FALLBACK;
+  }
+
+  try {
+    const result = (await db.query(
+      queries.selectExerciseCatalog
+    )) as ExerciseCatalogRow[];
+
+    return result.map((exercise) => ({
+      id: exercise.id,
+      name: exercise.name,
+      equipment: exercise.equipment ?? 'Unknown',
+      muscleGroup: exercise.muscleGroup ?? 'Unknown',
+    }));
+  } catch (error) {
+    console.error('Failed to fetch exercise catalog.', error);
+    return EXERCISE_CATALOG_FALLBACK;
+  }
 }

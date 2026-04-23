@@ -25,4 +25,18 @@ export const queries = {
   WHERE id = ?
   LIMIT 1
   `,
+  selectExerciseCatalog: `
+  SELECT
+    e.id,
+    e.name,
+    eq.name AS equipment,
+    mg.name AS muscleGroup
+  FROM exercise AS e
+  LEFT JOIN equipment AS eq
+    ON eq.id = e.equipment_id
+  LEFT JOIN muscle_group AS mg
+    ON mg.id = e.muscle_group_id
+  ORDER BY e.name ASC
+  LIMIT 100
+  `,
 };

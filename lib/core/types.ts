@@ -22,6 +22,13 @@ export type ExerciseListItem = {
   equipment: string;
 };
 
+export type ExerciseCatalogListItem = {
+  id: number;
+  name: string;
+  equipment: string;
+  muscleGroup: string;
+};
+
 export type ExercisesByMuscleGroup = Record<string, ExerciseListItem[]>;
 
 export type PlannedExercisePlan = {

@@ -90,11 +90,53 @@ export function removePlannedExerciseFromDay(
   });
 }
 
+export function movePlannedExerciseInDay(
+  mesocycleDays: MesocycleDayDraft[],
+  dayIndex: number,
+  fromPlannedExerciseIndex: number,
+  toPlannedExerciseIndex: number
+) {
+  const day = mesocycleDays[dayIndex];
+
+  if (
+    day == null ||
+    fromPlannedExerciseIndex === toPlannedExerciseIndex ||
+    fromPlannedExerciseIndex < 0 ||
+    toPlannedExerciseIndex < 0 ||
+    fromPlannedExerciseIndex >= day.plannedExercises.length ||
+    toPlannedExerciseIndex >= day.plannedExercises.length
+  ) {
+    return mesocycleDays;
+  }
+
+  return mesocycleDays.map((currentDay, index) => {
+    if (index !== dayIndex) {
+      return currentDay;
+    }
+
+    const plannedExercises = [...currentDay.plannedExercises];
+    const [movedExercise] = plannedExercises.splice(fromPlannedExerciseIndex, 1);
+    plannedExercises.splice(toPlannedExerciseIndex, 0, movedExercise);
+
+    return {
+      ...currentDay,
+      plannedExercises: plannedExercises.map((exercise, exerciseOrder) => ({
+        ...exercise,
+        exerciseOrder,
+      })),
+    };
+  });
+}
+
 export function removeDayFromMesocycleTemplate(
   mesocycleDays: MesocycleDayDraft[],
   dayIndex: number
 ) {
-  if (mesocycleDays.length <= 1 || dayIndex === 0) {
+  if (
+    mesocycleDays.length <= 1 ||
+    dayIndex < 0 ||
+    dayIndex >= mesocycleDays.length
+  ) {
     return mesocycleDays;
   }
 
@@ -104,6 +146,31 @@ export function removeDayFromMesocycleTemplate(
       ...day,
       dayOrder,
     }));
+}
+
+export function moveDayInMesocycleTemplate(
+  mesocycleDays: MesocycleDayDraft[],
+  fromDayIndex: number,
+  toDayIndex: number
+) {
+  if (
+    fromDayIndex === toDayIndex ||
+    fromDayIndex < 0 ||
+    toDayIndex < 0 ||
+    fromDayIndex >= mesocycleDays.length ||
+    toDayIndex >= mesocycleDays.length
+  ) {
+    return mesocycleDays;
+  }
+
+  const nextMesocycleDays = [...mesocycleDays];
+  const [movedDay] = nextMesocycleDays.splice(fromDayIndex, 1);
+  nextMesocycleDays.splice(toDayIndex, 0, movedDay);
+
+  return nextMesocycleDays.map((day, dayOrder) => ({
+    ...day,
+    dayOrder,
+  }));
 }
 
 export function duplicateDayInMesocycleTemplate(

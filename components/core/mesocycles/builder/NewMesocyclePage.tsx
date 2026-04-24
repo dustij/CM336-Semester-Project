@@ -15,6 +15,8 @@ import {
   addDayToMesocycleTemplate,
   addMuscleGroupToDay,
   duplicateDayInMesocycleTemplate,
+  moveDayInMesocycleTemplate,
+  movePlannedExerciseInDay,
   removeDayFromMesocycleTemplate,
   removePlannedExerciseFromDay,
   updateMesocycleDayOfWeek,
@@ -114,6 +116,30 @@ export default function NewMesocyclePage({
     );
   };
 
+  const handleMovePlannedExerciseInDay = (
+    dayIndex: number,
+    fromPlannedExerciseIndex: number,
+    toPlannedExerciseIndex: number
+  ) => {
+    setMesocycleDays((prev) =>
+      movePlannedExerciseInDay(
+        prev,
+        dayIndex,
+        fromPlannedExerciseIndex,
+        toPlannedExerciseIndex
+      )
+    );
+  };
+
+  const handleMoveDayInMesocycleTemplate = (
+    fromDayIndex: number,
+    toDayIndex: number
+  ) => {
+    setMesocycleDays((prev) =>
+      moveDayInMesocycleTemplate(prev, fromDayIndex, toDayIndex)
+    );
+  };
+
   const handleAddDayToMesocycleTemplate = () => {
     setMesocycleDays((prev) => addDayToMesocycleTemplate(prev));
   };
@@ -148,12 +174,15 @@ export default function NewMesocyclePage({
             key={mDay.dayOrder}
             day={mDay}
             dayIndex={i}
+            dayCount={mesocycleDays.length}
             exercisesByMuscleGroup={exercisesByMuscleGroup}
             isDuplicateDisabled={isMaxDays}
             muscleGroups={muscleGroups}
             onAddMuscleGroup={handleAddMuscleGroupToDay}
             onDayChange={handleDayChange}
             onDuplicateDay={handleDuplicateDayInMesocycleTemplate}
+            onMoveDay={handleMoveDayInMesocycleTemplate}
+            onMovePlannedExercise={handleMovePlannedExerciseInDay}
             onPlannedExerciseChange={handlePlannedExerciseChanged}
             onRemoveDay={handleRemoveDayFromMesocycleTemplate}
             onRemovePlannedExercise={handleRemovePlannedExerciseFromDay}

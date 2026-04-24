@@ -5,6 +5,8 @@ import {
   addDayToMesocycleTemplate,
   addMuscleGroupToDay,
   duplicateDayInMesocycleTemplate,
+  moveDayInMesocycleTemplate,
+  movePlannedExerciseInDay,
   removeDayFromMesocycleTemplate,
   removePlannedExerciseFromDay,
   updateMesocycleDayOfWeek,
@@ -87,6 +89,56 @@ test('removePlannedExerciseFromDay reindexes exerciseOrder after removing a plan
   );
   assert.equal(mesocycleDays[0].plannedExercises[2].exerciseOrder, 2);
   assert.equal(updatedDays[1], mesocycleDays[1]);
+});
+
+test('movePlannedExerciseInDay reorders planned exercises and reindexes exerciseOrder', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [
+        plannedExercise('Chest', 0),
+        plannedExercise('Shoulders', 1),
+        plannedExercise('Triceps', 2),
+      ],
+    },
+    {
+      dayOfWeek: 'Tuesday',
+      dayOrder: 1,
+      plannedExercises: [plannedExercise('Back', 0)],
+    },
+  ];
+
+  const updatedDays = movePlannedExerciseInDay(mesocycleDays, 0, 2, 0);
+
+  assert.deepEqual(
+    updatedDays[0].plannedExercises.map(({ muscleGroup, exerciseOrder }) => ({
+      muscleGroup,
+      exerciseOrder,
+    })),
+    [
+      { muscleGroup: 'Triceps', exerciseOrder: 0 },
+      { muscleGroup: 'Chest', exerciseOrder: 1 },
+      { muscleGroup: 'Shoulders', exerciseOrder: 2 },
+    ]
+  );
+  assert.equal(mesocycleDays[0].plannedExercises[2].exerciseOrder, 2);
+  assert.equal(updatedDays[1], mesocycleDays[1]);
+});
+
+test('movePlannedExerciseInDay returns the same list for no-op or invalid moves', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [plannedExercise('Chest', 0)],
+    },
+  ];
+
+  assert.equal(movePlannedExerciseInDay(mesocycleDays, 0, 0, 0), mesocycleDays);
+  assert.equal(movePlannedExerciseInDay(mesocycleDays, 0, -1, 0), mesocycleDays);
+  assert.equal(movePlannedExerciseInDay(mesocycleDays, 0, 0, 1), mesocycleDays);
+  assert.equal(movePlannedExerciseInDay(mesocycleDays, 1, 0, 0), mesocycleDays);
 });
 
 test('updateMesocycleDayOfWeek updates only the targeted day', () => {
@@ -222,7 +274,30 @@ test('removeDayFromMesocycleTemplate removes a day and reindexes dayOrder', () =
   assert.equal(mesocycleDays[2].dayOrder, 2);
 });
 
-test('removeDayFromMesocycleTemplate keeps the first or only day', () => {
+test('removeDayFromMesocycleTemplate can remove the first day and reindex dayOrder', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [],
+    },
+    {
+      dayOfWeek: 'Tuesday',
+      dayOrder: 1,
+      plannedExercises: [],
+    },
+  ];
+
+  const updatedDays = removeDayFromMesocycleTemplate(mesocycleDays, 0);
+
+  assert.deepEqual(
+    updatedDays.map(({ dayOfWeek, dayOrder }) => ({ dayOfWeek, dayOrder })),
+    [{ dayOfWeek: 'Tuesday', dayOrder: 0 }]
+  );
+  assert.equal(mesocycleDays[1].dayOrder, 1);
+});
+
+test('removeDayFromMesocycleTemplate keeps the only day or invalid day indexes', () => {
   const mesocycleDays = [
     {
       dayOfWeek: 'Monday',
@@ -232,9 +307,49 @@ test('removeDayFromMesocycleTemplate keeps the first or only day', () => {
   ];
 
   assert.equal(removeDayFromMesocycleTemplate(mesocycleDays, 0), mesocycleDays);
+  assert.equal(removeDayFromMesocycleTemplate(mesocycleDays, -1), mesocycleDays);
+  assert.equal(removeDayFromMesocycleTemplate(mesocycleDays, 1), mesocycleDays);
+});
 
-  const multipleDays = [
-    ...mesocycleDays,
+test('moveDayInMesocycleTemplate reorders days and reindexes dayOrder', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [plannedExercise('Chest', 0)],
+    },
+    {
+      dayOfWeek: 'Wednesday',
+      dayOrder: 1,
+      plannedExercises: [plannedExercise('Back', 0)],
+    },
+    {
+      dayOfWeek: 'Friday',
+      dayOrder: 2,
+      plannedExercises: [plannedExercise('Legs', 0)],
+    },
+  ];
+
+  const updatedDays = moveDayInMesocycleTemplate(mesocycleDays, 2, 1);
+
+  assert.deepEqual(
+    updatedDays.map(({ dayOfWeek, dayOrder }) => ({ dayOfWeek, dayOrder })),
+    [
+      { dayOfWeek: 'Monday', dayOrder: 0 },
+      { dayOfWeek: 'Friday', dayOrder: 1 },
+      { dayOfWeek: 'Wednesday', dayOrder: 2 },
+    ]
+  );
+  assert.equal(mesocycleDays[2].dayOrder, 2);
+});
+
+test('moveDayInMesocycleTemplate returns the same list for no-op or invalid moves', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [],
+    },
     {
       dayOfWeek: 'Tuesday',
       dayOrder: 1,
@@ -242,7 +357,11 @@ test('removeDayFromMesocycleTemplate keeps the first or only day', () => {
     },
   ];
 
-  assert.equal(removeDayFromMesocycleTemplate(multipleDays, 0), multipleDays);
+  assert.equal(moveDayInMesocycleTemplate(mesocycleDays, 0, 0), mesocycleDays);
+  assert.equal(moveDayInMesocycleTemplate(mesocycleDays, -1, 0), mesocycleDays);
+  assert.equal(moveDayInMesocycleTemplate(mesocycleDays, 0, -1), mesocycleDays);
+  assert.equal(moveDayInMesocycleTemplate(mesocycleDays, 2, 0), mesocycleDays);
+  assert.equal(moveDayInMesocycleTemplate(mesocycleDays, 0, 2), mesocycleDays);
 });
 
 test('duplicateDayInMesocycleTemplate duplicates a day after the source day and reindexes dayOrder', () => {

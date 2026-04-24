@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import type { ExercisesByMuscleGroup } from '@/lib/core/types';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Plus, Trash } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import MuscleGroupDialog from './MuscleGroupDialog';
 import PlannedExerciseCard from './PlannedExerciseCard';
 import {
@@ -25,10 +25,16 @@ export default function NewMesocyclePage({
   muscleGroups,
 }: NewMesocyclePageProps) {
   // TODO: implement logic to enforce unique dayOfWeek and limit days to max 7
+  const pathname = usePathname();
   const router = useRouter();
   const [mesocycleDays, setMesocycleDays] = useState<MesocycleDayDraft[]>([
-    { dayOfWeek: 'Monday', dayOrder: 0, plannedExercises: [] },
+    { dayOfWeek: null, dayOrder: 0, plannedExercises: [] },
   ]);
+
+  useEffect(() => {
+    // Reset the exercises when leaving page
+    setMesocycleDays([{ dayOfWeek: null, dayOrder: 0, plannedExercises: [] }]);
+  }, [pathname]);
 
   const handleAddMuscleGroupToDay = (dayIndex: number, muscleGroup: string) => {
     setMesocycleDays((prev) =>
@@ -46,7 +52,10 @@ export default function NewMesocyclePage({
   };
 
   return (
-    <main className="bg-my-background flex min-h-0 flex-1 flex-col overflow-hidden">
+    <main
+      key={pathname} // reset day combobox when leaving page
+      className="bg-my-background flex min-h-0 flex-1 flex-col overflow-hidden"
+    >
       <div className="flex w-full items-center justify-between px-5 py-3.5">
         <Button
           variant="ghost"

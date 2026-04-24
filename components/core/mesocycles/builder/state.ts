@@ -7,7 +7,7 @@ export type PlannedExerciseDraft = ExerciseListItem & {
 };
 
 export type MesocycleDayDraft = {
-  dayOfWeek: Weekday;
+  dayOfWeek: Weekday | null;
   dayOrder: number;
   plannedExercises: PlannedExerciseDraft[];
 };

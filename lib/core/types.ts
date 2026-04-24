@@ -55,3 +55,18 @@ export type PerformedExercise = {
   notes: string | null;
   sets: PerformedSet[];
 };
+
+export type PlannedExerciseDraft = {
+  id: number | null;
+  name: string | null;
+  equipment: string | null;
+  exerciseOrder: number;
+  exerciseType: string;
+  muscleGroup: string;
+};
+
+export type MesocycleDayDraft = {
+  dayOfWeek: Weekday | null;
+  dayOrder: number;
+  plannedExercises: PlannedExerciseDraft[];
+};

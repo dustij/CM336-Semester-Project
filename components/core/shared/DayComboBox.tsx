@@ -8,21 +8,27 @@ import {
 } from '@/components/ui/combobox';
 import { Weekday } from '@/lib/core/types';
 
-export default function DayComboBox() {
+type DayComboBoxProps = {
+  value: Weekday | null;
+  onValueChange: (value: Weekday | null) => void;
+};
+
+const WEEKDAYS: Weekday[] = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+export default function DayComboBox({
+  value,
+  onValueChange,
+}: DayComboBoxProps) {
   return (
-    <Combobox
-      items={
-        [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ] as Weekday[]
-      }
-    >
+    <Combobox items={WEEKDAYS} value={value} onValueChange={onValueChange}>
       <ComboboxInput placeholder="Choose day..." className="text-body h-full" />
       <ComboboxContent>
         <ComboboxEmpty>No day found.</ComboboxEmpty>

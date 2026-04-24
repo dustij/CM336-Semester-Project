@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { getMesocycleList } from '@/db/repository';
+import { getMesocycleList } from '@/db/repository/repository';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 

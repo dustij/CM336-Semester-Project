@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { getExerciseCatalog } from '@/db/repository';
+import { getExerciseCatalog } from '@/db/repository/repository';
 import { ListFilter } from 'lucide-react';
 
 export default async function ExercisesPage() {

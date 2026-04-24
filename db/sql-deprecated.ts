@@ -1,4 +1,5 @@
 export const queries = {
+  // Dusti's
   createUsersTable: `
   CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -38,5 +39,19 @@ export const queries = {
     ON mg.id = e.muscle_group_id
   ORDER BY e.name ASC
   LIMIT 100
+  `,
+
+  // Luke's Potential Statements
+  createMesocycleTemplateTable: `
+  CREATE TABLE IF NOT EXISTS mesocycle_template (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL
+    description TEXT NULL
+    duration_weeks INT NOT NULL
+    is_favorite BOOLEAN NULL
+    `,
+  insertMesocycleTemplate: `
+  INSERT INTO mesocycle_template (title, description, duration_weeks, is_favorite)
+  VALUES(?, ?, ?, ?)
   `,
 };

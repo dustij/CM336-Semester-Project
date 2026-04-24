@@ -1,7 +1,7 @@
 import 'server-only';
 
-import * as db from '@/db/db';
-import { queries } from '@/db/sql';
+import * as db from '@/db/server/db';
+import { queries } from '@/db/sql-deprecated';
 import type {
   ExerciseCatalogListItem,
   ExerciseListItem,

@@ -18,7 +18,7 @@ export default function PlannedExerciseCard({
   const selectedExercise =
     value.id == null
       ? null
-      : exercises.find((exercise) => exercise.id === value.id) ?? null;
+      : (exercises.find((exercise) => exercise.id === value.id) ?? null);
 
   return (
     <div className="flex flex-col gap-2.5 rounded-[8px] bg-white p-2.5 shadow">
@@ -26,14 +26,16 @@ export default function PlannedExerciseCard({
         <div className="bg-my-secondary rounded-[8px] px-2 py-1">
           <p className="text-my-secondary-foreground">{value.muscleGroup}</p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon-xl"
-          className="text-red-500"
-          onClick={onRemove}
-        >
-          <Trash className="size-5" />
-        </Button>
+        <div>
+          <Button
+            variant="ghost"
+            size="icon-xl"
+            className="text-red-500"
+            onClick={onRemove}
+          >
+            <Trash className="size-5" />
+          </Button>
+        </div>
       </div>
       <div>
         <ExerciseComboBox

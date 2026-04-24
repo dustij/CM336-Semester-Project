@@ -1,6 +1,5 @@
 'use client';
 
-import DayComboBox from '@/components/core/shared/DayComboBox';
 import { Button } from '@/components/ui/button';
 import type {
   ExercisesByMuscleGroup,
@@ -8,14 +7,17 @@ import type {
   PlannedExerciseDraft,
   Weekday,
 } from '@/lib/core/types';
-import { cn } from '@/lib/utils';
-import { ArrowLeft, Plus, Trash } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import MuscleGroupDialog from './MuscleGroupDialog';
-import PlannedExerciseCard from './PlannedExerciseCard';
+import MesocycleTemplateDay from './MesocycleTemplateDay';
 import {
+  addDayToMesocycleTemplate,
   addMuscleGroupToDay,
+  duplicateDayInMesocycleTemplate,
+  moveDayInMesocycleTemplate,
+  movePlannedExerciseInDay,
+  removeDayFromMesocycleTemplate,
   removePlannedExerciseFromDay,
   updateMesocycleDayOfWeek,
   updatePlannedExerciseInDay,
@@ -114,6 +116,42 @@ export default function NewMesocyclePage({
     );
   };
 
+  const handleMovePlannedExerciseInDay = (
+    dayIndex: number,
+    fromPlannedExerciseIndex: number,
+    toPlannedExerciseIndex: number
+  ) => {
+    setMesocycleDays((prev) =>
+      movePlannedExerciseInDay(
+        prev,
+        dayIndex,
+        fromPlannedExerciseIndex,
+        toPlannedExerciseIndex
+      )
+    );
+  };
+
+  const handleMoveDayInMesocycleTemplate = (
+    fromDayIndex: number,
+    toDayIndex: number
+  ) => {
+    setMesocycleDays((prev) =>
+      moveDayInMesocycleTemplate(prev, fromDayIndex, toDayIndex)
+    );
+  };
+
+  const handleAddDayToMesocycleTemplate = () => {
+    setMesocycleDays((prev) => addDayToMesocycleTemplate(prev));
+  };
+
+  const handleRemoveDayFromMesocycleTemplate = (dayIndex: number) => {
+    setMesocycleDays((prev) => removeDayFromMesocycleTemplate(prev, dayIndex));
+  };
+
+  const handleDuplicateDayInMesocycleTemplate = (dayIndex: number) => {
+    setMesocycleDays((prev) => duplicateDayInMesocycleTemplate(prev, dayIndex));
+  };
+
   return (
     <main className="bg-my-background flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex w-full items-center justify-between px-5 py-3.5">
@@ -132,58 +170,23 @@ export default function NewMesocyclePage({
       </div>
       <div className="flex min-h-0 min-w-full flex-1 gap-4 overflow-auto px-5">
         {mesocycleDays.map((mDay, i) => (
-          // dayOfWeek must be unique
-          <div key={mDay.dayOrder} className="min-w-[300px]">
-            <div className="flex items-center justify-between bg-white p-2.5">
-              <div className="h-[40px] max-w-38">
-                <DayComboBox
-                  value={mDay.dayOfWeek}
-                  onValueChange={(dayOfWeek) => handleDayChange(i, dayOfWeek)}
-                />
-              </div>
-              <div>
-                <Button variant="ghost" size="icon-xl" className="text-red-500">
-                  {i !== 0 && <Trash className="size-5" />}
-                </Button>
-              </div>
-            </div>
-            {/* List planned exercises */}
-            <div
-              className={cn(
-                'flex flex-col gap-2.5 bg-gray-100 px-2.5',
-                mDay.plannedExercises.length > 0 && 'pt-2.5'
-              )}
-            >
-              {mDay.plannedExercises.map((planned, plannedIndex) => (
-                <PlannedExerciseCard
-                  exercises={exercisesByMuscleGroup[planned.muscleGroup] ?? []}
-                  value={planned}
-                  key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
-                  onValueChanged={(nextPlannedExercise) =>
-                    handlePlannedExerciseChanged(
-                      i,
-                      plannedIndex,
-                      nextPlannedExercise
-                    )
-                  }
-                  onRemove={() =>
-                    handleRemovePlannedExerciseFromDay(i, plannedIndex)
-                  }
-                />
-              ))}
-            </div>
-            {/* Add muscle group */}
-            <div className="bg-gray-100 p-2.5">
-              <div className="border-border flex h-[60px] items-center justify-center rounded-[8px] border-2 border-dashed">
-                <MuscleGroupDialog
-                  muscleGroups={muscleGroups}
-                  onSelect={(muscleGroup) =>
-                    handleAddMuscleGroupToDay(i, muscleGroup)
-                  }
-                />
-              </div>
-            </div>
-          </div>
+          <MesocycleTemplateDay
+            key={mDay.dayOrder}
+            day={mDay}
+            dayIndex={i}
+            dayCount={mesocycleDays.length}
+            exercisesByMuscleGroup={exercisesByMuscleGroup}
+            isDuplicateDisabled={isMaxDays}
+            muscleGroups={muscleGroups}
+            onAddMuscleGroup={handleAddMuscleGroupToDay}
+            onDayChange={handleDayChange}
+            onDuplicateDay={handleDuplicateDayInMesocycleTemplate}
+            onMoveDay={handleMoveDayInMesocycleTemplate}
+            onMovePlannedExercise={handleMovePlannedExerciseInDay}
+            onPlannedExerciseChange={handlePlannedExerciseChanged}
+            onRemoveDay={handleRemoveDayFromMesocycleTemplate}
+            onRemovePlannedExercise={handleRemovePlannedExerciseFromDay}
+          />
         ))}
         <div className="border-border flex max-h-[60px] min-w-[300px] items-center justify-center rounded-[8px] border-2 border-dashed">
           <Button
@@ -191,6 +194,7 @@ export default function NewMesocyclePage({
             size="lg"
             className="text-body text-md size-full"
             disabled={isMaxDays}
+            onClick={handleAddDayToMesocycleTemplate}
           >
             <Plus className="size-[20px]" />
             Add a day

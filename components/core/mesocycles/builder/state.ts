@@ -1,16 +1,25 @@
-import type { ExerciseListItem, Weekday } from '@/lib/core/types';
+import type {
+  MesocycleDayDraft,
+  PlannedExerciseDraft,
+  Weekday,
+} from '@/lib/core/types';
 
-export type PlannedExerciseDraft = ExerciseListItem & {
-  exerciseOrder: number;
-  exerciseType: string;
-  muscleGroup: string;
-};
+export function updateMesocycleDayOfWeek(
+  mesocycleDays: MesocycleDayDraft[],
+  dayIndex: number,
+  dayOfWeek: Weekday | null
+) {
+  return mesocycleDays.map((day, index) => {
+    if (index !== dayIndex) {
+      return day;
+    }
 
-export type MesocycleDayDraft = {
-  dayOfWeek: Weekday;
-  dayOrder: number;
-  plannedExercises: PlannedExerciseDraft[];
-};
+    return {
+      ...day,
+      dayOfWeek,
+    };
+  });
+}
 
 export function addMuscleGroupToDay(
   mesocycleDays: MesocycleDayDraft[],
@@ -27,14 +36,34 @@ export function addMuscleGroupToDay(
       plannedExercises: [
         ...day.plannedExercises,
         {
-          id: 0,
-          name: muscleGroup,
-          equipment: '',
+          id: null,
+          name: null,
+          equipment: null,
           exerciseOrder: day.plannedExercises.length,
           exerciseType: '',
           muscleGroup,
         },
       ],
+    };
+  });
+}
+
+export function updatePlannedExerciseInDay(
+  mesocycleDays: MesocycleDayDraft[],
+  dayIndex: number,
+  plannedExerciseIndex: number,
+  plannedExercise: PlannedExerciseDraft
+) {
+  return mesocycleDays.map((day, index) => {
+    if (index !== dayIndex) {
+      return day;
+    }
+
+    return {
+      ...day,
+      plannedExercises: day.plannedExercises.map((exercise, exerciseIndex) =>
+        exerciseIndex === plannedExerciseIndex ? plannedExercise : exercise
+      ),
     };
   });
 }

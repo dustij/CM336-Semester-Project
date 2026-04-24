@@ -30,7 +30,7 @@ export default function PlannedExerciseCard({
           <Button
             variant="ghost"
             size="icon-xl"
-            className="text-red-500"
+            className="text-red-500 hover:bg-transparent hover:text-red-500/80"
             onClick={onRemove}
           >
             <Trash className="size-5" />

@@ -89,3 +89,72 @@ export function removePlannedExerciseFromDay(
     };
   });
 }
+
+export function removeDayFromMesocycleTemplate(
+  mesocycleDays: MesocycleDayDraft[],
+  dayIndex: number
+) {
+  if (mesocycleDays.length <= 1 || dayIndex === 0) {
+    return mesocycleDays;
+  }
+
+  return mesocycleDays
+    .filter((_, index) => index !== dayIndex)
+    .map((day, dayOrder) => ({
+      ...day,
+      dayOrder,
+    }));
+}
+
+export function duplicateDayInMesocycleTemplate(
+  mesocycleDays: MesocycleDayDraft[],
+  dayIndex: number
+) {
+  if (
+    mesocycleDays.length >= 7 ||
+    dayIndex < 0 ||
+    dayIndex >= mesocycleDays.length
+  ) {
+    return mesocycleDays;
+  }
+
+  const duplicatedDay: MesocycleDayDraft = {
+    ...mesocycleDays[dayIndex],
+    dayOfWeek: null,
+    plannedExercises: mesocycleDays[dayIndex].plannedExercises.map(
+      (plannedExercise) => ({ ...plannedExercise })
+    ),
+  };
+
+  return [
+    ...mesocycleDays.slice(0, dayIndex + 1),
+    duplicatedDay,
+    ...mesocycleDays.slice(dayIndex + 1),
+  ].map((day, dayOrder) => ({
+    ...day,
+    dayOrder,
+  }));
+}
+
+export function addDayToMesocycleTemplate(
+  mesocycleDays: MesocycleDayDraft[]
+) {
+  if (mesocycleDays.length >= 7) {
+    return mesocycleDays;
+  }
+
+  const nextDayOrder =
+    mesocycleDays.reduce(
+      (maxDayOrder, day) => Math.max(maxDayOrder, day.dayOrder),
+      -1
+    ) + 1;
+
+  return [
+    ...mesocycleDays,
+    {
+      dayOfWeek: null,
+      dayOrder: nextDayOrder,
+      plannedExercises: [],
+    },
+  ];
+}

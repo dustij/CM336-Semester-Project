@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  addDayToMesocycleTemplate,
   addMuscleGroupToDay,
+  duplicateDayInMesocycleTemplate,
+  removeDayFromMesocycleTemplate,
   removePlannedExerciseFromDay,
   updateMesocycleDayOfWeek,
   updatePlannedExerciseInDay,
@@ -148,4 +151,148 @@ test('updatePlannedExerciseInDay updates only the targeted planned exercise', ()
   });
   assert.equal(updatedDays[0].plannedExercises[1], mesocycleDays[0].plannedExercises[1]);
   assert.equal(updatedDays[1], mesocycleDays[1]);
+});
+
+test('addDayToMesocycleTemplate appends a blank day with the next dayOrder', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [plannedExercise('Chest', 0)],
+    },
+    {
+      dayOfWeek: 'Wednesday',
+      dayOrder: 3,
+      plannedExercises: [plannedExercise('Back', 0)],
+    },
+  ];
+
+  const updatedDays = addDayToMesocycleTemplate(mesocycleDays);
+
+  assert.equal(updatedDays.length, 3);
+  assert.equal(updatedDays[0], mesocycleDays[0]);
+  assert.equal(updatedDays[1], mesocycleDays[1]);
+  assert.deepEqual(updatedDays[2], {
+    dayOfWeek: null,
+    dayOrder: 4,
+    plannedExercises: [],
+  });
+});
+
+test('addDayToMesocycleTemplate returns the same list after seven days', () => {
+  const mesocycleDays = Array.from({ length: 7 }, (_, index) => ({
+    dayOfWeek: 'Monday',
+    dayOrder: index,
+    plannedExercises: [],
+  }));
+
+  const updatedDays = addDayToMesocycleTemplate(mesocycleDays);
+
+  assert.equal(updatedDays, mesocycleDays);
+});
+
+test('removeDayFromMesocycleTemplate removes a day and reindexes dayOrder', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [plannedExercise('Chest', 0)],
+    },
+    {
+      dayOfWeek: 'Wednesday',
+      dayOrder: 1,
+      plannedExercises: [plannedExercise('Back', 0)],
+    },
+    {
+      dayOfWeek: 'Friday',
+      dayOrder: 2,
+      plannedExercises: [plannedExercise('Legs', 0)],
+    },
+  ];
+
+  const updatedDays = removeDayFromMesocycleTemplate(mesocycleDays, 1);
+
+  assert.deepEqual(
+    updatedDays.map(({ dayOfWeek, dayOrder }) => ({ dayOfWeek, dayOrder })),
+    [
+      { dayOfWeek: 'Monday', dayOrder: 0 },
+      { dayOfWeek: 'Friday', dayOrder: 1 },
+    ]
+  );
+  assert.equal(mesocycleDays[2].dayOrder, 2);
+});
+
+test('removeDayFromMesocycleTemplate keeps the first or only day', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [],
+    },
+  ];
+
+  assert.equal(removeDayFromMesocycleTemplate(mesocycleDays, 0), mesocycleDays);
+
+  const multipleDays = [
+    ...mesocycleDays,
+    {
+      dayOfWeek: 'Tuesday',
+      dayOrder: 1,
+      plannedExercises: [],
+    },
+  ];
+
+  assert.equal(removeDayFromMesocycleTemplate(multipleDays, 0), multipleDays);
+});
+
+test('duplicateDayInMesocycleTemplate duplicates a day after the source day and reindexes dayOrder', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [plannedExercise('Chest', 0)],
+    },
+    {
+      dayOfWeek: 'Wednesday',
+      dayOrder: 1,
+      plannedExercises: [plannedExercise('Back', 0)],
+    },
+  ];
+
+  const updatedDays = duplicateDayInMesocycleTemplate(mesocycleDays, 0);
+
+  assert.deepEqual(
+    updatedDays.map(({ dayOfWeek, dayOrder }) => ({ dayOfWeek, dayOrder })),
+    [
+      { dayOfWeek: 'Monday', dayOrder: 0 },
+      { dayOfWeek: null, dayOrder: 1 },
+      { dayOfWeek: 'Wednesday', dayOrder: 2 },
+    ]
+  );
+  assert.deepEqual(updatedDays[1].plannedExercises, [
+    plannedExercise('Chest', 0),
+  ]);
+  assert.notEqual(updatedDays[1].plannedExercises[0], mesocycleDays[0].plannedExercises[0]);
+  assert.equal(mesocycleDays[1].dayOrder, 1);
+});
+
+test('duplicateDayInMesocycleTemplate returns the same list at seven days or with an invalid index', () => {
+  const mesocycleDays = Array.from({ length: 7 }, (_, index) => ({
+    dayOfWeek: 'Monday',
+    dayOrder: index,
+    plannedExercises: [],
+  }));
+
+  assert.equal(duplicateDayInMesocycleTemplate(mesocycleDays, 0), mesocycleDays);
+
+  const shorterMesocycleDays = mesocycleDays.slice(0, 2);
+
+  assert.equal(
+    duplicateDayInMesocycleTemplate(shorterMesocycleDays, -1),
+    shorterMesocycleDays
+  );
+  assert.equal(
+    duplicateDayInMesocycleTemplate(shorterMesocycleDays, 2),
+    shorterMesocycleDays
+  );
 });

@@ -1,7 +1,7 @@
 'use server';
 
-import * as db from '@/db/db';
-import { queries } from '@/db/sql';
+import * as db from '@/db/server/db';
+import { queries } from '@/db/sql-deprecated';
 import { LoginFormSchema, LoginFormState } from '@/lib/core/form-definitions';
 import { createSession } from '@/lib/session';
 import bcrypt from 'bcrypt';

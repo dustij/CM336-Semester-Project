@@ -22,7 +22,7 @@ import {
   EllipsisVertical,
   Trash,
 } from 'lucide-react';
-import { useRef, useState, type DragEvent, type PointerEvent } from 'react';
+import { useRef, useState, type PointerEvent } from 'react';
 import MuscleGroupDialog from './MuscleGroupDialog';
 import PlannedExerciseCard from './PlannedExerciseCard';
 
@@ -74,10 +74,10 @@ export default function MesocycleTemplateDay({
     useState<number | null>(null);
   const [dragOverPlannedExerciseIndex, setDragOverPlannedExerciseIndex] =
     useState<number | null>(null);
-  const touchDraggedPlannedExerciseIndexRef = useRef<number | null>(null);
+  const draggedPlannedExerciseIndexRef = useRef<number | null>(null);
 
   const resetPlannedExerciseDragState = () => {
-    touchDraggedPlannedExerciseIndexRef.current = null;
+    draggedPlannedExerciseIndexRef.current = null;
     setDraggedPlannedExerciseIndex(null);
     setDragOverPlannedExerciseIndex(null);
   };
@@ -108,56 +108,11 @@ export default function MesocycleTemplateDay({
       'button, input, textarea, select, [role="combobox"], [data-slot="combobox-trigger"], [data-slot="combobox-content"], [data-slot="dropdown-menu-trigger"]'
     ) != null;
 
-  const handlePlannedExerciseDragStart = (
-    event: DragEvent<HTMLDivElement>,
-    plannedExerciseIndex: number
-  ) => {
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(plannedExerciseIndex));
-    setDraggedPlannedExerciseIndex(plannedExerciseIndex);
-  };
-
-  const handlePlannedExerciseDragOver = (
-    event: DragEvent<HTMLDivElement>,
-    plannedExerciseIndex: number
-  ) => {
-    if (draggedPlannedExerciseIndex == null) {
-      return;
-    }
-
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-    setDragOverPlannedExerciseIndex(plannedExerciseIndex);
-  };
-
-  const handlePlannedExerciseDrop = (
-    event: DragEvent<HTMLDivElement>,
-    plannedExerciseIndex: number
-  ) => {
-    event.preventDefault();
-
-    if (draggedPlannedExerciseIndex != null) {
-      onMovePlannedExercise(
-        dayIndex,
-        draggedPlannedExerciseIndex,
-        plannedExerciseIndex
-      );
-    }
-
-    setDraggedPlannedExerciseIndex(null);
-    setDragOverPlannedExerciseIndex(null);
-  };
-
-  const handlePlannedExerciseDragEnd = () => {
-    resetPlannedExerciseDragState();
-  };
-
   const handlePlannedExercisePointerDown = (
     event: PointerEvent<HTMLDivElement>,
     plannedExerciseIndex: number
   ) => {
     if (
-      event.pointerType === 'mouse' ||
       day.plannedExercises.length < 2 ||
       isInteractiveDragTarget(event.target)
     ) {
@@ -166,14 +121,14 @@ export default function MesocycleTemplateDay({
 
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
-    touchDraggedPlannedExerciseIndexRef.current = plannedExerciseIndex;
+    draggedPlannedExerciseIndexRef.current = plannedExerciseIndex;
     setDraggedPlannedExerciseIndex(plannedExerciseIndex);
   };
 
   const handlePlannedExercisePointerMove = (
     event: PointerEvent<HTMLDivElement>
   ) => {
-    if (touchDraggedPlannedExerciseIndexRef.current == null) {
+    if (draggedPlannedExerciseIndexRef.current == null) {
       return;
     }
 
@@ -190,8 +145,7 @@ export default function MesocycleTemplateDay({
   const handlePlannedExercisePointerUp = (
     event: PointerEvent<HTMLDivElement>
   ) => {
-    const draggedPlannedExerciseIndex =
-      touchDraggedPlannedExerciseIndexRef.current;
+    const draggedPlannedExerciseIndex = draggedPlannedExerciseIndexRef.current;
 
     if (draggedPlannedExerciseIndex == null) {
       return;
@@ -281,7 +235,6 @@ export default function MesocycleTemplateDay({
             key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
             data-mesocycle-day-index={dayIndex}
             data-planned-exercise-index={plannedIndex}
-            draggable
             className={cn(
               'relative cursor-grab touch-none active:cursor-grabbing',
               draggedPlannedExerciseIndex === plannedIndex && 'opacity-50',
@@ -296,14 +249,6 @@ export default function MesocycleTemplateDay({
                 plannedIndex > draggedPlannedExerciseIndex &&
                 'after:absolute after:right-0 after:-bottom-[7px] after:left-0 after:h-0.5 after:rounded-full after:bg-red-500'
             )}
-            onDragStart={(event) =>
-              handlePlannedExerciseDragStart(event, plannedIndex)
-            }
-            onDragOver={(event) =>
-              handlePlannedExerciseDragOver(event, plannedIndex)
-            }
-            onDrop={(event) => handlePlannedExerciseDrop(event, plannedIndex)}
-            onDragEnd={handlePlannedExerciseDragEnd}
             onPointerDown={(event) =>
               handlePlannedExercisePointerDown(event, plannedIndex)
             }

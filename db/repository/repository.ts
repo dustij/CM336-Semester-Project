@@ -1,7 +1,5 @@
 import 'server-only';
 
-import * as db from '@/db/server/db';
-import { queries } from '@/db/sql-deprecated';
 import type {
   ExerciseCatalogListItem,
   ExerciseListItem,
@@ -21,15 +19,15 @@ type ExerciseCatalogRow = RowDataPacket & {
 const EXERCISE_CATALOG_FALLBACK: ExerciseCatalogListItem[] = [
   {
     id: 1,
-    name: 'Bench Press (Incline)',
+    name: 'Barbell Bench Press',
     equipment: 'Barbell',
     muscleGroup: 'Chest',
   },
   {
     id: 2,
-    name: 'Dumbbell Skullcrusher',
-    equipment: 'Dumbbell',
-    muscleGroup: 'Triceps',
+    name: 'Barbell Curl',
+    equipment: 'Barbell',
+    muscleGroup: 'Upper Arms',
   },
 ];
 
@@ -89,23 +87,24 @@ export async function getExerciseCatalog(): Promise<ExerciseCatalogListItem[]> {
   cacheTag('exercises:list');
   cacheLife('days');
 
-  if (!hasDatabaseConfig()) {
-    return EXERCISE_CATALOG_FALLBACK;
-  }
+  return EXERCISE_CATALOG_FALLBACK;
+  // if (!hasDatabaseConfig()) {
+  //   return EXERCISE_CATALOG_FALLBACK;
+  // }
 
-  try {
-    const result = (await db.query(
-      queries.selectExerciseCatalog
-    )) as ExerciseCatalogRow[];
+  // try {
+  //   const result = (await db.query(
+  //     selectExerciseCatalog
+  //   )) as ExerciseCatalogRow[];
 
-    return result.map((exercise) => ({
-      id: exercise.id,
-      name: exercise.name,
-      equipment: exercise.equipment ?? 'Unknown',
-      muscleGroup: exercise.muscleGroup ?? 'Unknown',
-    }));
-  } catch (error) {
-    console.error('Failed to fetch exercise catalog.', error);
-    return EXERCISE_CATALOG_FALLBACK;
-  }
+  //   return result.map((exercise) => ({
+  //     id: exercise.id,
+  //     name: exercise.name,
+  //     equipment: exercise.equipment ?? 'Unknown',
+  //     muscleGroup: exercise.muscleGroup ?? 'Unknown',
+  //   }));
+  // } catch (error) {
+  //   console.error('Failed to fetch exercise catalog.', error);
+  //   return EXERCISE_CATALOG_FALLBACK;
+  // }
 }

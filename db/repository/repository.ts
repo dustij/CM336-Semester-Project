@@ -1,5 +1,7 @@
 import 'server-only';
 
+import * as db from '@/db/server/db';
+import { selectExerciseCatalog } from '@/db/sql/ts/exercise/query';
 import type {
   ExerciseCatalogListItem,
   ExerciseListItem,
@@ -82,29 +84,31 @@ export async function getExerciseListsByMuscleGroup(
   return Object.fromEntries(exerciseEntries);
 }
 
-export async function getExerciseCatalog(): Promise<ExerciseCatalogListItem[]> {
+export async function getExerciseCatalog(
+  limit = 100,
+  offset = 0
+): Promise<ExerciseCatalogListItem[]> {
   'use cache';
   cacheTag('exercises:list');
   cacheLife('days');
 
-  return EXERCISE_CATALOG_FALLBACK;
-  // if (!hasDatabaseConfig()) {
-  //   return EXERCISE_CATALOG_FALLBACK;
-  // }
+  if (!hasDatabaseConfig()) {
+    return EXERCISE_CATALOG_FALLBACK;
+  }
 
-  // try {
-  //   const result = (await db.query(
-  //     selectExerciseCatalog
-  //   )) as ExerciseCatalogRow[];
+  try {
+    const result = (await db.query(
+      selectExerciseCatalog(limit, offset)
+    )) as ExerciseCatalogRow[];
 
-  //   return result.map((exercise) => ({
-  //     id: exercise.id,
-  //     name: exercise.name,
-  //     equipment: exercise.equipment ?? 'Unknown',
-  //     muscleGroup: exercise.muscleGroup ?? 'Unknown',
-  //   }));
-  // } catch (error) {
-  //   console.error('Failed to fetch exercise catalog.', error);
-  //   return EXERCISE_CATALOG_FALLBACK;
-  // }
+    return result.map((exercise) => ({
+      id: exercise.id,
+      name: exercise.name,
+      equipment: exercise.equipment ?? 'Unknown',
+      muscleGroup: exercise.muscleGroup ?? 'Unknown',
+    }));
+  } catch (error) {
+    console.error('Failed to fetch exercise catalog.', error);
+    return EXERCISE_CATALOG_FALLBACK;
+  }
 }

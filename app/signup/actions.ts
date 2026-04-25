@@ -1,7 +1,7 @@
 'use server';
 
 import * as db from '@/db/server/db';
-import { queries } from '@/db/sql-deprecated';
+import { insertUser } from '@/db/sql/ts/users/query';
 import bcrypt from 'bcrypt';
 import * as z from 'zod';
 
@@ -52,7 +52,7 @@ export async function signup(
   // VALUES (?, ?, ?)
   let result: QueryResult;
   try {
-    result = await db.query(queries.insertUser, [email, name, hashedPassword]);
+    result = await db.query(insertUser, [email, name, hashedPassword]);
   } catch (error) {
     if (isDuplicateEntryError(error)) {
       return {

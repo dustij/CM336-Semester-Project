@@ -1,7 +1,7 @@
 'use server';
 
 import * as db from '@/db/server/db';
-import { queries } from '@/db/sql-deprecated';
+import { selectUserCredentialsByEmail } from '@/db/sql/ts/users/query';
 import { LoginFormSchema, LoginFormState } from '@/lib/core/form-definitions';
 import { createSession } from '@/lib/session';
 import bcrypt from 'bcrypt';
@@ -33,7 +33,7 @@ export async function login(
 
   let result: QueryResult;
   try {
-    result = await db.query(queries.selectUserCredentialsByEmail, [email]);
+    result = await db.query(selectUserCredentialsByEmail, [email]);
   } catch (error) {
     console.error('Failed to fetch user account for login.', error);
 

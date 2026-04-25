@@ -24,7 +24,7 @@ const EXERCISE_CATALOG_FALLBACK: ExerciseCatalogListItem[] = [
     muscleGroup: 'Chest',
   },
   {
-    id: 1,
+    id: 2,
     name: 'Barbell Curl',
     equipment: 'Barbell',
     muscleGroup: 'Upper Arms',
@@ -94,7 +94,7 @@ export async function getExerciseCatalog(): Promise<ExerciseCatalogListItem[]> {
 
   // try {
   //   const result = (await db.query(
-  //     queries.selectExerciseCatalog
+  //     selectExerciseCatalog
   //   )) as ExerciseCatalogRow[];
 
   //   return result.map((exercise) => ({

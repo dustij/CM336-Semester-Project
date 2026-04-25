@@ -1,7 +1,15 @@
 import 'server-only';
 
+import * as db from '@/db/server/db';
+import {
+  buildSelectExerciseCatalogQuery,
+  selectExerciseEquipmentOptions,
+  selectExerciseMuscleGroupOptions,
+} from '@/db/sql/ts/exercise/query';
 import type {
   ExerciseCatalogListItem,
+  ExerciseCatalogFilters,
+  ExerciseFilterOptions,
   ExerciseListItem,
   ExercisesByMuscleGroup,
   MesocycleListItem,
@@ -14,6 +22,10 @@ type ExerciseCatalogRow = RowDataPacket & {
   name: string;
   equipment: string | null;
   muscleGroup: string | null;
+};
+
+type ExerciseFilterOptionRow = RowDataPacket & {
+  name: string;
 };
 
 const EXERCISE_CATALOG_FALLBACK: ExerciseCatalogListItem[] = [
@@ -30,6 +42,39 @@ const EXERCISE_CATALOG_FALLBACK: ExerciseCatalogListItem[] = [
     muscleGroup: 'Upper Arms',
   },
 ];
+
+function getFallbackExerciseFilterOptions(): ExerciseFilterOptions {
+  return {
+    equipment: Array.from(
+      new Set(EXERCISE_CATALOG_FALLBACK.map((exercise) => exercise.equipment))
+    ).sort(),
+    muscleGroups: Array.from(
+      new Set(EXERCISE_CATALOG_FALLBACK.map((exercise) => exercise.muscleGroup))
+    ).sort(),
+  };
+}
+
+function filterFallbackExerciseCatalog(
+  filters: ExerciseCatalogFilters = {}
+): ExerciseCatalogListItem[] {
+  const query = filters.q?.toLowerCase();
+
+  return EXERCISE_CATALOG_FALLBACK.filter((exercise) => {
+    if (query && !exercise.name.toLowerCase().includes(query)) {
+      return false;
+    }
+
+    if (filters.equipment && exercise.equipment !== filters.equipment) {
+      return false;
+    }
+
+    if (filters.muscleGroup && exercise.muscleGroup !== filters.muscleGroup) {
+      return false;
+    }
+
+    return true;
+  });
+}
 
 function hasDatabaseConfig() {
   return Boolean(process.env['MYSQL_URI']);
@@ -82,29 +127,54 @@ export async function getExerciseListsByMuscleGroup(
   return Object.fromEntries(exerciseEntries);
 }
 
-export async function getExerciseCatalog(): Promise<ExerciseCatalogListItem[]> {
+export async function getExerciseCatalog(
+  filters: ExerciseCatalogFilters = {}
+): Promise<ExerciseCatalogListItem[]> {
   'use cache';
   cacheTag('exercises:list');
   cacheLife('days');
 
-  return EXERCISE_CATALOG_FALLBACK;
-  // if (!hasDatabaseConfig()) {
-  //   return EXERCISE_CATALOG_FALLBACK;
-  // }
+  if (!hasDatabaseConfig()) {
+    return filterFallbackExerciseCatalog(filters);
+  }
 
-  // try {
-  //   const result = (await db.query(
-  //     selectExerciseCatalog
-  //   )) as ExerciseCatalogRow[];
+  try {
+    const { sql, values } = buildSelectExerciseCatalogQuery(filters);
+    const result = (await db.query(sql, values)) as ExerciseCatalogRow[];
 
-  //   return result.map((exercise) => ({
-  //     id: exercise.id,
-  //     name: exercise.name,
-  //     equipment: exercise.equipment ?? 'Unknown',
-  //     muscleGroup: exercise.muscleGroup ?? 'Unknown',
-  //   }));
-  // } catch (error) {
-  //   console.error('Failed to fetch exercise catalog.', error);
-  //   return EXERCISE_CATALOG_FALLBACK;
-  // }
+    return result.map((exercise) => ({
+      id: exercise.id,
+      name: exercise.name,
+      equipment: exercise.equipment ?? 'Unknown',
+      muscleGroup: exercise.muscleGroup ?? 'Unknown',
+    }));
+  } catch (error) {
+    console.error('Failed to fetch exercise catalog.', error);
+    return filterFallbackExerciseCatalog(filters);
+  }
+}
+
+export async function getExerciseFilterOptions(): Promise<ExerciseFilterOptions> {
+  'use cache';
+  cacheTag('exercises:filter-options');
+  cacheLife('days');
+
+  if (!hasDatabaseConfig()) {
+    return getFallbackExerciseFilterOptions();
+  }
+
+  try {
+    const [equipmentRows, muscleGroupRows] = (await Promise.all([
+      db.query(selectExerciseEquipmentOptions),
+      db.query(selectExerciseMuscleGroupOptions),
+    ])) as [ExerciseFilterOptionRow[], ExerciseFilterOptionRow[]];
+
+    return {
+      equipment: equipmentRows.map((row) => row.name),
+      muscleGroups: muscleGroupRows.map((row) => row.name),
+    };
+  } catch (error) {
+    console.error('Failed to fetch exercise filter options.', error);
+    return getFallbackExerciseFilterOptions();
+  }
 }

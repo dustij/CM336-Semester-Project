@@ -1,9 +1,19 @@
-import { Button } from '@/components/ui/button';
-import { getExerciseCatalog } from '@/db/repository/repository';
-import { ListFilter } from 'lucide-react';
+import { ExerciseFilterDialog } from '@/components/core/exercises/ExerciseFilterDialog';
+import {
+  getExerciseCatalog,
+  getExerciseFilterOptions,
+} from '@/db/repository/repository';
+import type { ExerciseCatalogFilters } from '@/lib/core/types';
 
-export default async function ExercisesPage() {
-  const exercises = await getExerciseCatalog();
+type ExercisesPageProps = {
+  filters: ExerciseCatalogFilters;
+};
+
+export default async function ExercisesPage({ filters }: ExercisesPageProps) {
+  const [exercises, filterOptions] = await Promise.all([
+    getExerciseCatalog(filters),
+    getExerciseFilterOptions(),
+  ]);
 
   return (
     <main className="bg-my-background flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -12,22 +22,22 @@ export default async function ExercisesPage() {
           <p className="text-[18px] leading-7 font-semibold tracking-[-0.02em] text-gray-950">
             Exercises
           </p>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-auto gap-2 rounded-none p-0 text-[#667085] hover:bg-transparent active:translate-y-0"
-          >
-            <ListFilter className="size-5" />
-            <span className="text-[16px] leading-6 font-medium">Filter</span>
-          </Button>
+          <ExerciseFilterDialog
+            filters={filters}
+            filterOptions={filterOptions}
+          />
         </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-[18px] pb-5">
         {exercises.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <p className="text-xl font-medium text-gray-950">No Exercises Found</p>
-            <p className="text-body">Exercises will appear here once available.</p>
+            <p className="text-xl font-medium text-gray-950">
+              No Exercises Found
+            </p>
+            <p className="text-body">
+              Exercises will appear here once available.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-[10px]">

@@ -26,6 +26,8 @@ export const queries = {
   WHERE id = ?
   LIMIT 1
   `,
+
+  // Shota's
   selectExerciseCatalog: `
   SELECT
     e.id,

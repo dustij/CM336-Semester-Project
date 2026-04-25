@@ -10,7 +10,8 @@ CREATE TABLE exercise (
   CONSTRAINT fk_exercise_equipment FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id),
   CONSTRAINT fk_exercise_muscle_group FOREIGN KEY (muscle_group_id) REFERENCES muscle_group(muscle_group_id),
   CONSTRAINT fk_exercise_created_by_user FOREIGN KEY (created_by_user_id) REFERENCES users(user_id)
-    ON DELETE SET NULL
+    ON DELETE SET NULL,
+  CONSTRAINT uq_exercise_name_equipment_muscle_group UNIQUE (name, equipment_id, muscle_group_id)
 )
 `;
 
@@ -19,6 +20,14 @@ type ExerciseCatalogQueryFilters = ExerciseCatalogFilters & {
   offset?: number;
 };
 
+function toSqlLimit(value: number, label: string) {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`${label} must be a non-negative safe integer`);
+  }
+
+  return value;
+}
+
 export function buildSelectExerciseCatalogQuery({
   q,
   equipment,
@@ -26,8 +35,10 @@ export function buildSelectExerciseCatalogQuery({
   limit = 100,
   offset = 0,
 }: ExerciseCatalogQueryFilters = {}) {
+  const safeLimit = toSqlLimit(limit, 'limit');
+  const safeOffset = toSqlLimit(offset, 'offset');
   const whereClauses: string[] = [];
-  const values: (string | number)[] = [];
+  const values: string[] = [];
 
   if (q) {
     whereClauses.push('e.name LIKE ?');
@@ -61,10 +72,14 @@ LEFT JOIN muscle_group AS mg
   ON mg.muscle_group_id = e.muscle_group_id
 ${whereSql}
 ORDER BY e.name ASC, e.exercise_id ASC
-LIMIT ? OFFSET ?;
+LIMIT ${safeLimit} OFFSET ${safeOffset};
 `,
-    values: [...values, limit, offset],
+    values,
   };
+}
+
+export function selectExerciseCatalog(limit: number, offset: number) {
+  return buildSelectExerciseCatalogQuery({ limit, offset }).sql;
 }
 
 export const selectExerciseEquipmentOptions = `

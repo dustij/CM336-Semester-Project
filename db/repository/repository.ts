@@ -7,8 +7,8 @@ import {
   selectExerciseMuscleGroupOptions,
 } from '@/db/sql/ts/exercise/query';
 import type {
-  ExerciseCatalogListItem,
   ExerciseCatalogFilters,
+  ExerciseCatalogListItem,
   ExerciseFilterOptions,
   ExerciseListItem,
   ExercisesByMuscleGroup,

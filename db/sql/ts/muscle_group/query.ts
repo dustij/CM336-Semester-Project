@@ -4,3 +4,5 @@ CREATE TABLE muscle_group (
   name VARCHAR(50) NOT NULL UNIQUE
 )
 `;
+
+// TODO: selectAllMuscleGroups

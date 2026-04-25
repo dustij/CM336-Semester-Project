@@ -1,3 +1,5 @@
+DROP DATABASE IF EXISTS MESOCYCLE_PLANNER;
+CREATE DATABASE MESOCYCLE_PLANNER;
 USE MESOCYCLE_PLANNER;
 
 
@@ -32,7 +34,8 @@ CREATE TABLE exercise (
   CONSTRAINT fk_exercise_equipment FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id),
   CONSTRAINT fk_exercise_muscle_group FOREIGN KEY (muscle_group_id) REFERENCES muscle_group(muscle_group_id),
   CONSTRAINT fk_exercise_created_by_user FOREIGN KEY (created_by_user_id) REFERENCES users(user_id) 
-    ON DELETE SET NULL
+    ON DELETE SET NULL,
+  CONSTRAINT uq_exercise_name_equipment_muscle_group UNIQUE (name, equipment_id, muscle_group_id)
 );
 
 

@@ -9,6 +9,7 @@ import {
 import type {
   ExerciseCatalogFilters,
   ExerciseCatalogListItem,
+  ExerciseCatalogPage,
   ExerciseFilterOptions,
   ExerciseListItem,
   ExercisesByMuscleGroup,
@@ -27,6 +28,9 @@ type ExerciseCatalogRow = RowDataPacket & {
 type ExerciseFilterOptionRow = RowDataPacket & {
   name: string;
 };
+
+export const EXERCISE_CATALOG_PAGE_SIZE = 25;
+const EXERCISE_CATALOG_DEFAULT_LIMIT = 100;
 
 const EXERCISE_CATALOG_FALLBACK: ExerciseCatalogListItem[] = [
   {
@@ -74,6 +78,22 @@ function filterFallbackExerciseCatalog(
 
     return true;
   });
+}
+
+function getExerciseCatalogPageFromRows(
+  rows: ExerciseCatalogListItem[],
+  limit: number,
+  offset: number
+): ExerciseCatalogPage {
+  const exercises = rows.slice(0, limit);
+  const hasNextPage = rows.length > limit;
+
+  return {
+    exercises,
+    limit,
+    offset,
+    nextOffset: hasNextPage ? offset + limit : null,
+  };
 }
 
 function hasDatabaseConfig() {
@@ -127,31 +147,57 @@ export async function getExerciseListsByMuscleGroup(
   return Object.fromEntries(exerciseEntries);
 }
 
-export async function getExerciseCatalog(
-  filters: ExerciseCatalogFilters = {}
-): Promise<ExerciseCatalogListItem[]> {
+export async function getExerciseCatalogPage(
+  filters: ExerciseCatalogFilters = {},
+  {
+    limit = EXERCISE_CATALOG_PAGE_SIZE,
+    offset = 0,
+  }: { limit?: number; offset?: number } = {}
+): Promise<ExerciseCatalogPage> {
   'use cache';
   cacheTag('exercises:list');
   cacheLife('days');
 
   if (!hasDatabaseConfig()) {
-    return filterFallbackExerciseCatalog(filters);
+    const fallbackRows = filterFallbackExerciseCatalog(filters).slice(
+      offset,
+      offset + limit + 1
+    );
+    return getExerciseCatalogPageFromRows(fallbackRows, limit, offset);
   }
 
   try {
-    const { sql, values } = buildSelectExerciseCatalogQuery(filters);
+    const { sql, values } = buildSelectExerciseCatalogQuery({
+      ...filters,
+      limit: limit + 1,
+      offset,
+    });
     const result = (await db.query(sql, values)) as ExerciseCatalogRow[];
-
-    return result.map((exercise) => ({
+    const rows = result.map((exercise) => ({
       id: exercise.id,
       name: exercise.name,
       equipment: exercise.equipment ?? 'Unknown',
       muscleGroup: exercise.muscleGroup ?? 'Unknown',
     }));
+
+    return getExerciseCatalogPageFromRows(rows, limit, offset);
   } catch (error) {
     console.error('Failed to fetch exercise catalog.', error);
-    return filterFallbackExerciseCatalog(filters);
+    const fallbackRows = filterFallbackExerciseCatalog(filters).slice(
+      offset,
+      offset + limit + 1
+    );
+    return getExerciseCatalogPageFromRows(fallbackRows, limit, offset);
   }
+}
+
+export async function getExerciseCatalog(
+  filters: ExerciseCatalogFilters = {}
+): Promise<ExerciseCatalogListItem[]> {
+  const page = await getExerciseCatalogPage(filters, {
+    limit: EXERCISE_CATALOG_DEFAULT_LIMIT,
+  });
+  return page.exercises;
 }
 
 export async function getExerciseFilterOptions(): Promise<ExerciseFilterOptions> {

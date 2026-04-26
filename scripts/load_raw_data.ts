@@ -19,7 +19,7 @@ const outputSqlPath = path.join(
   'db',
   'sql',
   'scripts',
-  'load_raw_data.sql',
+  'load_raw_data.sql'
 );
 
 function sqlString(value: string) {
@@ -28,6 +28,10 @@ function sqlString(value: string) {
 
 function tuple(values: string[]) {
   return `  (${values.map(sqlString).join(', ')})`;
+}
+
+function toTitleCase(value: string) {
+  return value.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 const csv = readFileSync(rawCsvPath, 'utf8');
@@ -39,16 +43,17 @@ const rows = parse(csv, {
 }) as RawExerciseRow[];
 
 const exercises = rows.map((row) => ({
-  muscleGroup: row.bodyPart,
-  equipment: row.equipment,
-  name: row.name,
+  muscleGroup: toTitleCase(row.bodyPart),
+  equipment: toTitleCase(row.equipment),
+  name: toTitleCase(row.name),
 }));
 
 const equipment = Array.from(
-  new Set(exercises.map((exercise) => exercise.equipment)),
+  new Set(exercises.map((exercise) => exercise.equipment))
 ).sort((a, b) => a.localeCompare(b));
+
 const muscleGroups = Array.from(
-  new Set(exercises.map((exercise) => exercise.muscleGroup)),
+  new Set(exercises.map((exercise) => exercise.muscleGroup))
 ).sort((a, b) => a.localeCompare(b));
 
 const sql = `USE MESOCYCLE_PLANNER;
@@ -62,23 +67,25 @@ CREATE TEMPORARY TABLE raw_exercise_import (
   muscle_group_name VARCHAR(50) NOT NULL
 );
 
-INSERT IGNORE INTO equipment (name)
+INSERT INTO equipment (name)
 VALUES
-${equipment.map((name) => tuple([name])).join(',\n')};
+${equipment.map((name) => tuple([name])).join(',\n')}
+ON DUPLICATE KEY UPDATE name = VALUES(name);
 
-INSERT IGNORE INTO muscle_group (name)
+INSERT INTO muscle_group (name)
 VALUES
-${muscleGroups.map((name) => tuple([name])).join(',\n')};
+${muscleGroups.map((name) => tuple([name])).join(',\n')}
+ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 INSERT INTO raw_exercise_import (name, equipment_name, muscle_group_name)
 VALUES
 ${exercises
   .map((exercise) =>
-    tuple([exercise.name, exercise.equipment, exercise.muscleGroup]),
+    tuple([exercise.name, exercise.equipment, exercise.muscleGroup])
   )
   .join(',\n')};
 
-INSERT IGNORE INTO exercise (name, equipment_id, muscle_group_id)
+INSERT INTO exercise (name, equipment_id, muscle_group_id)
 SELECT
   raw.name,
   equipment.equipment_id,
@@ -87,7 +94,8 @@ FROM raw_exercise_import AS raw
 INNER JOIN equipment
   ON equipment.name = raw.equipment_name
 INNER JOIN muscle_group
-  ON muscle_group.name = raw.muscle_group_name;
+  ON muscle_group.name = raw.muscle_group_name
+ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 DROP TEMPORARY TABLE raw_exercise_import;
 
@@ -98,5 +106,5 @@ mkdirSync(path.dirname(outputSqlPath), { recursive: true });
 writeFileSync(outputSqlPath, sql);
 
 console.log(
-  `Wrote ${exercises.length} exercises, ${equipment.length} equipment types, and ${muscleGroups.length} muscle groups to ${path.relative(projectRoot, outputSqlPath)}.`,
+  `Wrote ${exercises.length} exercises, ${equipment.length} equipment types, and ${muscleGroups.length} muscle groups to ${path.relative(projectRoot, outputSqlPath)}.`
 );

@@ -2,6 +2,14 @@
 
 import { Button } from '@/components/ui/button';
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -15,25 +23,133 @@ import type {
   ExerciseFilterOptions,
 } from '@/lib/core/types';
 import { ListFilter } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useRef, useState, type FormEvent, type RefObject } from 'react';
 
 type ExerciseFilterDialogProps = {
   filters: ExerciseCatalogFilters;
   filterOptions: ExerciseFilterOptions;
+  onNavigateStart: () => void;
 };
+
+type FilterComboboxProps = {
+  name: 'equipment' | 'muscleGroup';
+  value: string;
+  onValueChange: (value: string) => void;
+  items: string[];
+  allLabel: string;
+  emptyLabel: string;
+  placeholder: string;
+  portalContainer: RefObject<HTMLDivElement | null>;
+};
+
+function FilterCombobox({
+  name,
+  value,
+  onValueChange,
+  items,
+  allLabel,
+  emptyLabel,
+  placeholder,
+  portalContainer,
+}: FilterComboboxProps) {
+  const options = ['', ...items];
+
+  return (
+    <Combobox
+      name={name}
+      items={options}
+      value={value}
+      onValueChange={(nextValue) => onValueChange(nextValue ?? '')}
+      itemToStringLabel={(item) => item || allLabel}
+      itemToStringValue={(item) => item}
+    >
+      <ComboboxInput
+        placeholder={placeholder}
+        className="h-10 rounded-xl bg-white text-[14px] font-medium text-[#667085]"
+      />
+      <ComboboxContent container={portalContainer}>
+        <ComboboxEmpty>{emptyLabel}</ComboboxEmpty>
+        <ComboboxList>
+          {(item) => (
+            <ComboboxItem
+              key={item || 'all'}
+              value={item}
+              className="text-[14px] font-medium"
+            >
+              {item || allLabel}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  );
+}
 
 export function ExerciseFilterDialog({
   filters,
   filterOptions,
+  onNavigateStart,
 }: ExerciseFilterDialogProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [muscleGroupValue, setMuscleGroupValue] = useState(
+    filters.muscleGroup ?? ''
+  );
+  const [equipmentValue, setEquipmentValue] = useState(filters.equipment ?? '');
+  const comboboxPortalRef = useRef<HTMLDivElement | null>(null);
   const activeFilterCount = [
     filters.q,
     filters.equipment,
     filters.muscleGroup,
   ].filter(Boolean).length;
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      setMuscleGroupValue(filters.muscleGroup ?? '');
+      setEquipmentValue(filters.equipment ?? '');
+    }
+
+    setOpen(nextOpen);
+  };
+
+  const navigateTo = (href: string) => {
+    setOpen(false);
+
+    if (href === `${window.location.pathname}${window.location.search}`) {
+      return;
+    }
+
+    onNavigateStart();
+    router.push(href);
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const params = new URLSearchParams();
+
+    for (const key of ['q', 'muscleGroup', 'equipment']) {
+      const value = formData.get(key);
+      const trimmedValue = typeof value === 'string' ? value.trim() : '';
+
+      if (trimmedValue) {
+        params.set(key, trimmedValue);
+      }
+    }
+
+    const query = params.toString();
+
+    navigateTo(query ? `/exercises?${query}` : '/exercises');
+  };
+
+  const handleClear = () => {
+    navigateTo('/exercises');
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           type="button"
@@ -54,7 +170,12 @@ export function ExerciseFilterDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form action="/exercises" className="grid gap-3">
+        <form
+          action="/exercises"
+          method="get"
+          onSubmit={handleSubmit}
+          className="grid gap-3"
+        >
           <Input
             type="search"
             name="q"
@@ -64,47 +185,44 @@ export function ExerciseFilterDialog({
           />
 
           <div className="grid grid-cols-2 gap-2">
-            <select
+            <FilterCombobox
               name="muscleGroup"
-              defaultValue={filters.muscleGroup ?? ''}
-              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-10 rounded-xl border bg-white px-3 text-[14px] font-medium text-[#667085] outline-none focus-visible:ring-3"
-            >
-              <option value="">All muscle groups</option>
-              {filterOptions.muscleGroups.map((muscleGroup) => (
-                <option key={muscleGroup} value={muscleGroup}>
-                  {muscleGroup}
-                </option>
-              ))}
-            </select>
+              value={muscleGroupValue}
+              onValueChange={setMuscleGroupValue}
+              items={filterOptions.muscleGroups}
+              allLabel="All muscle groups"
+              emptyLabel="No muscle groups found."
+              placeholder="All muscle groups"
+              portalContainer={comboboxPortalRef}
+            />
 
-            <select
+            <FilterCombobox
               name="equipment"
-              defaultValue={filters.equipment ?? ''}
-              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-10 rounded-xl border bg-white px-3 text-[14px] font-medium text-[#667085] outline-none focus-visible:ring-3"
-            >
-              <option value="">All equipment</option>
-              {filterOptions.equipment.map((equipment) => (
-                <option key={equipment} value={equipment}>
-                  {equipment}
-                </option>
-              ))}
-            </select>
+              value={equipmentValue}
+              onValueChange={setEquipmentValue}
+              items={filterOptions.equipment}
+              allLabel="All equipment"
+              emptyLabel="No equipment found."
+              placeholder="All equipment"
+              portalContainer={comboboxPortalRef}
+            />
           </div>
 
           <div className="flex gap-2">
             <Button type="submit" className="h-10 flex-1 rounded-xl">
-              Apply SQL Filters
+              Apply Filters
             </Button>
             <Button
               type="button"
               variant="secondary"
-              asChild
+              onClick={handleClear}
               className="h-10 rounded-xl px-4"
             >
-              <Link href="/exercises">Clear</Link>
+              Clear
             </Button>
           </div>
         </form>
+        <div ref={comboboxPortalRef} />
       </DialogContent>
     </Dialog>
   );

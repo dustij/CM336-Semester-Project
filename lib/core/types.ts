@@ -29,6 +29,24 @@ export type ExerciseCatalogListItem = {
   muscleGroup: string;
 };
 
+export type ExerciseCatalogPage = {
+  exercises: ExerciseCatalogListItem[];
+  limit: number;
+  offset: number;
+  nextOffset: number | null;
+};
+
+export type ExerciseCatalogFilters = {
+  q?: string;
+  equipment?: string;
+  muscleGroup?: string;
+};
+
+export type ExerciseFilterOptions = {
+  equipment: string[];
+  muscleGroups: string[];
+};
+
 export type ExercisesByMuscleGroup = Record<string, ExerciseListItem[]>;
 
 export type PlannedExercisePlan = {

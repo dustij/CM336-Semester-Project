@@ -9,11 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { MuscleGroup } from '@/db/repository/muscle_group_repository';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 type MuscleGroupDialogProps = {
-  muscleGroups: string[];
+  muscleGroups: MuscleGroup[];
   onSelect: (muscleGroup: string) => void;
 };
 
@@ -51,12 +52,12 @@ export default function MuscleGroupDialog({
         <div className="flex flex-col gap-1">
           {muscleGroups.map((muscleGroup) => (
             <Button
-              key={muscleGroup}
+              key={`${muscleGroup.id}-${muscleGroup.name}`}
               variant="secondary"
               size="lg"
-              onClick={() => handleSelect(muscleGroup)}
+              onClick={() => handleSelect(muscleGroup.name)}
             >
-              {muscleGroup}
+              {muscleGroup.name}
             </Button>
           ))}
         </div>

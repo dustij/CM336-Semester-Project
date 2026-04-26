@@ -3,7 +3,7 @@ import {
   EXERCISE_CATALOG_PAGE_SIZE,
   getExerciseCatalogPage,
   getExerciseFilterOptions,
-} from '@/db/repository/repository';
+} from '@/db/repository/exercise_repository';
 import type { ExerciseCatalogFilters } from '@/lib/core/types';
 
 type ExercisesPageProps = {

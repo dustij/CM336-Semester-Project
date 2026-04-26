@@ -1,0 +1,3 @@
+USE MESOCYCLE_PLANNER;
+
+SELECT name FROM muscle_group;

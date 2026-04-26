@@ -87,7 +87,7 @@ SELECT DISTINCT eq.name AS name
 FROM exercise AS e
 INNER JOIN equipment AS eq
   ON eq.equipment_id = e.equipment_id
-ORDER BY eq.name ASC;
+ORDER BY eq.name ASC
 `;
 
 export const selectExerciseMuscleGroupOptions = `
@@ -95,5 +95,15 @@ SELECT DISTINCT mg.name AS name
 FROM exercise AS e
 INNER JOIN muscle_group AS mg
   ON mg.muscle_group_id = e.muscle_group_id
-ORDER BY mg.name ASC;
+ORDER BY mg.name ASC
+`;
+
+export const selectExercisesByMuscleGroup = `
+SELECT e.exercise_id AS id, e.name AS name, eq.name AS equipment
+FROM exercise AS e
+JOIN muscle_group AS mg
+  ON mg.muscle_group_id = e.muscle_group_id 
+JOIN equipment AS eq
+  ON eq.equipment_id = e.equipment_id
+WHERE mg.name = ?
 `;

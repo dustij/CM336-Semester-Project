@@ -52,10 +52,7 @@ export default function PlannedExerciseCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-36">
-              <DropdownMenuItem
-                disabled={isMoveUpDisabled}
-                onClick={onMoveUp}
-              >
+              <DropdownMenuItem disabled={isMoveUpDisabled} onClick={onMoveUp}>
                 <ArrowUp className="size-4" />
                 Move up
               </DropdownMenuItem>

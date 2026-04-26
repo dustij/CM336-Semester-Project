@@ -5,6 +5,7 @@ import {
   buildSelectExerciseCatalogQuery,
   selectExerciseEquipmentOptions,
   selectExerciseMuscleGroupOptions,
+  selectExercisesByMuscleGroup,
 } from '@/db/sql/ts/exercise/query';
 import type {
   ExerciseCatalogFilters,
@@ -24,6 +25,8 @@ type ExerciseCatalogRow = RowDataPacket & {
   equipment: string | null;
   muscleGroup: string | null;
 };
+
+type ExerciseListItemRow = RowDataPacket & ExerciseListItem;
 
 type ExerciseFilterOptionRow = RowDataPacket & {
   name: string;
@@ -105,10 +108,21 @@ export async function getExerciseListByMuscleGroup(
   muscleGroup: MuscleGroup
 ): Promise<ExerciseListItem[]> {
   'use cache';
-  // When we add feature user-created exercises, we will need to manually invalidate
-  cacheTag(`mesocycles:exercisesByMuscleGroup:${muscleGroup}`);
+  cacheTag(`mesocycles:exercisesByMuscleGroup:${muscleGroup.name}`);
   cacheLife('days'); // days because exercises may be updated but not often (IMPORTANT: we may need to change this later)
-  return [{ id: 0, name: 'Bench Press (incline)', equipment: 'Barbell' }];
+  try {
+    const result = (await db.query(selectExercisesByMuscleGroup, [
+      muscleGroup.name,
+    ])) as ExerciseListItemRow[];
+    return result.map((exercise) => ({
+      id: exercise.id,
+      name: exercise.name,
+      equipment: exercise.equipment,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch exercises by muscle group.', error);
+    return [];
+  }
 }
 
 export async function getExerciseListsByMuscleGroup(
@@ -116,7 +130,7 @@ export async function getExerciseListsByMuscleGroup(
 ): Promise<ExercisesByMuscleGroup> {
   const exerciseEntries = await Promise.all(
     muscleGroups.map(async (muscleGroup) => [
-      muscleGroup,
+      muscleGroup.name,
       await getExerciseListByMuscleGroup(muscleGroup),
     ])
   );

@@ -1,7 +1,7 @@
 import {
   EXERCISE_CATALOG_PAGE_SIZE,
   getExerciseCatalogPage,
-} from '@/db/repository/repository';
+} from '@/db/repository/exercise_repository';
 import type { ExerciseCatalogFilters } from '@/lib/core/types';
 import type { NextRequest } from 'next/server';
 

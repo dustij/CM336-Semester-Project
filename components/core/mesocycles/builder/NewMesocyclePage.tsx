@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { MuscleGroup } from '@/db/repository/muscle_group_repository';
 import type {
   ExercisesByMuscleGroup,
   MesocycleDayDraft,
@@ -24,7 +25,7 @@ import {
 } from './state';
 
 type NewMesocyclePageProps = {
-  muscleGroups: string[];
+  muscleGroups: MuscleGroup[];
   exercisesByMuscleGroup: ExercisesByMuscleGroup;
 };
 

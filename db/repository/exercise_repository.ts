@@ -13,10 +13,10 @@ import type {
   ExerciseFilterOptions,
   ExerciseListItem,
   ExercisesByMuscleGroup,
-  MesocycleListItem,
 } from '@/lib/core/types';
 import { RowDataPacket } from 'mysql2';
 import { cacheLife, cacheTag } from 'next/cache';
+import { MuscleGroup } from './muscle_group_repository';
 
 type ExerciseCatalogRow = RowDataPacket & {
   id: number;
@@ -100,32 +100,9 @@ function hasDatabaseConfig() {
   return Boolean(process.env['MYSQL_URI']);
 }
 
-export async function getCurrentMesocycle(userId: number) {
-  'use cache';
-  cacheTag(`mesocycles:user:${userId}`);
-  cacheLife('max'); // max because we manually invalidate after user selects a mesocycle as current
-  return null;
-}
-
-export async function getMesocycleList(
-  userId: number
-): Promise<MesocycleListItem[]> {
-  'use cache';
-  cacheTag(`mesocycles:user:${userId}`);
-  cacheLife('max'); // max because we manually invalidate after user adds a new mesocycle
-  return [];
-}
-
-export async function getMuscleGroupList() {
-  'use cache';
-  cacheTag(`mesocycles:muscleGroups`);
-  cacheLife('days'); // days because muscle groups may be updated but not often
-
-  return ['Chest', 'Back'];
-}
-
+// TODO ------------
 export async function getExerciseListByMuscleGroup(
-  muscleGroup: string
+  muscleGroup: MuscleGroup
 ): Promise<ExerciseListItem[]> {
   'use cache';
   // When we add feature user-created exercises, we will need to manually invalidate
@@ -135,7 +112,7 @@ export async function getExerciseListByMuscleGroup(
 }
 
 export async function getExerciseListsByMuscleGroup(
-  muscleGroups: string[]
+  muscleGroups: MuscleGroup[]
 ): Promise<ExercisesByMuscleGroup> {
   const exerciseEntries = await Promise.all(
     muscleGroups.map(async (muscleGroup) => [
@@ -146,6 +123,7 @@ export async function getExerciseListsByMuscleGroup(
 
   return Object.fromEntries(exerciseEntries);
 }
+//-------------------
 
 export async function getExerciseCatalogPage(
   filters: ExerciseCatalogFilters = {},

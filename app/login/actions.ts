@@ -1,18 +1,11 @@
 'use server';
 
-import * as db from '@/db/server/db';
-import { selectUserCredentialsByEmail } from '@/db/sql/ts/users/query';
+import { getUserCredentialsByEmail } from '@/db/repository/users_repository';
 import { LoginFormSchema, LoginFormState } from '@/lib/core/form-definitions';
 import { createSession } from '@/lib/session';
 import bcrypt from 'bcrypt';
-import { QueryResult, RowDataPacket } from 'mysql2';
 import { redirect } from 'next/navigation';
 import * as z from 'zod';
-
-type UserLoginRow = RowDataPacket & {
-  id: number;
-  password_hash: string;
-};
 
 export async function login(
   _state: LoginFormState,
@@ -31,9 +24,9 @@ export async function login(
 
   const { email, password } = validatedFields.data;
 
-  let result: QueryResult;
+  let user;
   try {
-    result = await db.query(selectUserCredentialsByEmail, [email]);
+    user = await getUserCredentialsByEmail(email);
   } catch (error) {
     console.error('Failed to fetch user account for login.', error);
 
@@ -42,15 +35,13 @@ export async function login(
     };
   }
 
-  const [user] = result as UserLoginRow[];
-
   if (!user) {
     return {
       message: 'Invalid email or password.',
     };
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isPasswordValid) {
     return {

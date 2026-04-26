@@ -163,10 +163,10 @@ export function ExerciseFilterDialog({
         </Button>
       </DialogTrigger>
       <DialogContent className="gap-5 rounded-[18px]">
-        <DialogHeader>
+        <DialogHeader className="text-body">
           <DialogTitle>Filter exercises</DialogTitle>
           <DialogDescription>
-            Use SQL conditions to search by name, muscle group, and equipment.
+            Search by name, muscle group, and equipment.
           </DialogDescription>
         </DialogHeader>
 

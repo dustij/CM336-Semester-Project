@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { MuscleGroup } from '@/db/repository/muscle_group_repository';
 import type {
   ExercisesByMuscleGroup,
   MesocycleDayDraft,
@@ -31,7 +32,7 @@ type MesocycleTemplateDayProps = {
   dayCount: number;
   exercisesByMuscleGroup: ExercisesByMuscleGroup;
   isDuplicateDisabled: boolean;
-  muscleGroups: string[];
+  muscleGroups: MuscleGroup[];
   onAddMuscleGroup: (dayIndex: number, muscleGroup: string) => void;
   onDayChange: (dayIndex: number, dayOfWeek: Weekday | null) => void;
   onDuplicateDay: (dayIndex: number) => void;

@@ -68,6 +68,37 @@ export function updatePlannedExerciseInDay(
   });
 }
 
+export function changePlannedExerciseMuscleGroupInDay(
+  mesocycleDays: MesocycleDayDraft[],
+  dayIndex: number,
+  plannedExerciseIndex: number,
+  muscleGroup: string
+) {
+  const day = mesocycleDays[dayIndex];
+
+  if (
+    day == null ||
+    plannedExerciseIndex < 0 ||
+    plannedExerciseIndex >= day.plannedExercises.length
+  ) {
+    return mesocycleDays;
+  }
+
+  return updatePlannedExerciseInDay(
+    mesocycleDays,
+    dayIndex,
+    plannedExerciseIndex,
+    {
+      ...day.plannedExercises[plannedExerciseIndex],
+      id: null,
+      name: null,
+      equipment: null,
+      exerciseType: '',
+      muscleGroup,
+    }
+  );
+}
+
 export function removePlannedExerciseFromDay(
   mesocycleDays: MesocycleDayDraft[],
   dayIndex: number,

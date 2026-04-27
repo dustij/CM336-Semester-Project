@@ -7,13 +7,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { ExerciseListItem, PlannedExerciseDraft } from '@/lib/core/types';
-import { ArrowDown, ArrowUp, EllipsisVertical, Trash } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeftRight,
+  ArrowUp,
+  EllipsisVertical,
+  Trash,
+} from 'lucide-react';
 
 type PlannedExerciseCardProps = {
   exercises: ExerciseListItem[];
   isMoveDownDisabled: boolean;
   isMoveUpDisabled: boolean;
   value: PlannedExerciseDraft;
+  onChangeExercise: () => void;
   onMoveDown: () => void;
   onMoveUp: () => void;
   onValueChanged: (value: PlannedExerciseDraft) => void;
@@ -24,6 +31,7 @@ export default function PlannedExerciseCard({
   isMoveDownDisabled,
   isMoveUpDisabled,
   value,
+  onChangeExercise,
   onMoveDown,
   onMoveUp,
   onValueChanged,
@@ -52,6 +60,10 @@ export default function PlannedExerciseCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-36">
+              <DropdownMenuItem onClick={onChangeExercise}>
+                <ArrowLeftRight className="size-4" />
+                Change
+              </DropdownMenuItem>
               <DropdownMenuItem disabled={isMoveUpDisabled} onClick={onMoveUp}>
                 <ArrowUp className="size-4" />
                 Move up

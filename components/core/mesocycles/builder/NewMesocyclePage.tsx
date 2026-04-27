@@ -21,6 +21,7 @@ import {
   movePlannedExerciseInDay,
   removeDayFromMesocycleTemplate,
   removePlannedExerciseFromDay,
+  changePlannedExerciseMuscleGroupInDay,
   updateMesocycleDayOfWeek,
   updatePlannedExerciseInDay,
 } from './state';
@@ -112,6 +113,21 @@ export default function NewMesocyclePage({
     );
   };
 
+  const handleChangePlannedExerciseMuscleGroup = (
+    dayIndex: number,
+    plannedExerciseIndex: number,
+    muscleGroup: string
+  ) => {
+    setMesocycleDays((prev) =>
+      changePlannedExerciseMuscleGroupInDay(
+        prev,
+        dayIndex,
+        plannedExerciseIndex,
+        muscleGroup
+      )
+    );
+  };
+
   const handleMovePlannedExerciseInDay = (
     dayIndex: number,
     fromPlannedExerciseIndex: number,
@@ -183,6 +199,9 @@ export default function NewMesocyclePage({
             onPlannedExerciseChange={handlePlannedExerciseChanged}
             onRemoveDay={handleRemoveDayFromMesocycleTemplate}
             onRemovePlannedExercise={handleRemovePlannedExerciseFromDay}
+            onChangePlannedExerciseMuscleGroup={
+              handleChangePlannedExerciseMuscleGroup
+            }
           />
         ))}
         <div className="border-border flex max-h-[60px] min-w-[300px] items-center justify-center rounded-[8px] border-2 border-dashed">

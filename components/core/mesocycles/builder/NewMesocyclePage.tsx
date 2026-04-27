@@ -9,8 +9,9 @@ import type {
   Weekday,
 } from '@/lib/core/types';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import FinalizeMesocycleDialog from './FinalizeMesocycleDialog';
 import MesocycleTemplateDay from './MesocycleTemplateDay';
 import {
   addDayToMesocycleTemplate,
@@ -33,16 +34,10 @@ export default function NewMesocyclePage({
   exercisesByMuscleGroup,
   muscleGroups,
 }: NewMesocyclePageProps) {
-  const pathname = usePathname();
   const router = useRouter();
   const [mesocycleDays, setMesocycleDays] = useState<MesocycleDayDraft[]>([
     { dayOfWeek: null, dayOrder: 0, plannedExercises: [] },
   ]);
-
-  useEffect(() => {
-    // Reset the exercises when leaving page
-    setMesocycleDays([{ dayOfWeek: null, dayOrder: 0, plannedExercises: [] }]);
-  }, [pathname]);
 
   const isMaxDays = mesocycleDays.length >= 7;
   const daySet = new Set<Weekday>();
@@ -165,9 +160,10 @@ export default function NewMesocyclePage({
           <ArrowLeft className="size-[18px]" />
           Back
         </Button>
-        <Button size="lg" className="min-w-20" disabled={!isValid}>
-          Create
-        </Button>
+        <FinalizeMesocycleDialog
+          disabled={!isValid}
+          mesocycleDays={mesocycleDays}
+        />
       </div>
       <div className="flex min-h-0 min-w-full flex-1 gap-4 overflow-auto px-5">
         {mesocycleDays.map((mDay, i) => (

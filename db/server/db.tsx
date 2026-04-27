@@ -3,7 +3,7 @@ import 'server-only';
 import type { ConnectionOptions, SslOptions } from 'mysql2';
 import mysql from 'mysql2/promise';
 
-type SqlSafeValue =
+export type SqlSafeValue =
   | string
   | number
   | bigint
@@ -13,6 +13,11 @@ type SqlSafeValue =
   | Uint8Array
   | SqlSafeValue[]
   | null;
+
+export type QueryExecutor = (
+  sql: string,
+  values?: SqlSafeValue[]
+) => Promise<unknown>;
 
 const SSL_MODE_QUERY_KEYS = ['ssl-mode', 'ssl_mode'] as const;
 
@@ -66,6 +71,30 @@ export async function query(sql: string, values: SqlSafeValue[] = []) {
   try {
     const [result] = await conn.execute(sql, values);
     return result;
+  } finally {
+    await conn.end();
+  }
+}
+
+export async function transaction<T>(
+  callback: (query: QueryExecutor) => Promise<T>
+) {
+  const conn = await getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    const txQuery: QueryExecutor = async (sql, values = []) => {
+      const [result] = await conn.execute(sql, values);
+      return result;
+    };
+
+    const result = await callback(txQuery);
+    await conn.commit();
+    return result;
+  } catch (error) {
+    await conn.rollback();
+    throw error;
   } finally {
     await conn.end();
   }

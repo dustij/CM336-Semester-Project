@@ -21,3 +21,8 @@ CREATE TABLE template_day (
   CONSTRAINT uq_template_day_weekday UNIQUE (template_id, day_of_week)
 )
 `;
+
+export const insertTemplateDay = `
+INSERT INTO template_day (template_id, day_of_week, day_order)
+VALUES (?, ?, ?)
+`;

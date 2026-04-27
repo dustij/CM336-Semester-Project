@@ -10,3 +10,8 @@ CREATE TABLE planned_exercise (
   CONSTRAINT uq_planned_exercise_order UNIQUE (template_day_id, exercise_order)
 )
 `;
+
+export const insertPlannedExercise = `
+INSERT INTO planned_exercise (exercise_id, template_day_id, exercise_order)
+VALUES (?, ?, ?)
+`;

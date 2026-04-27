@@ -9,6 +9,7 @@ import {
   movePlannedExerciseInDay,
   removeDayFromMesocycleTemplate,
   removePlannedExerciseFromDay,
+  changePlannedExerciseMuscleGroupInDay,
   updateMesocycleDayOfWeek,
   updatePlannedExerciseInDay,
 } from '../components/core/mesocycles/builder/state.ts';
@@ -200,6 +201,46 @@ test('updatePlannedExerciseInDay updates only the targeted planned exercise', ()
     exerciseOrder: 0,
     exerciseType: '',
     muscleGroup: 'Chest',
+  });
+  assert.equal(updatedDays[0].plannedExercises[1], mesocycleDays[0].plannedExercises[1]);
+  assert.equal(updatedDays[1], mesocycleDays[1]);
+});
+
+test('changePlannedExerciseMuscleGroupInDay replaces muscle group and clears the selected exercise', () => {
+  const mesocycleDays = [
+    {
+      dayOfWeek: 'Monday',
+      dayOrder: 0,
+      plannedExercises: [
+        plannedExercise('Chest', 0, {
+          id: 42,
+          name: 'Incline Bench Press',
+          equipment: 'Barbell',
+        }),
+        plannedExercise('Shoulders', 1),
+      ],
+    },
+    {
+      dayOfWeek: 'Tuesday',
+      dayOrder: 1,
+      plannedExercises: [plannedExercise('Back', 0)],
+    },
+  ];
+
+  const updatedDays = changePlannedExerciseMuscleGroupInDay(
+    mesocycleDays,
+    0,
+    0,
+    'Triceps'
+  );
+
+  assert.deepEqual(updatedDays[0].plannedExercises[0], {
+    id: null,
+    name: null,
+    equipment: null,
+    exerciseOrder: 0,
+    exerciseType: '',
+    muscleGroup: 'Triceps',
   });
   assert.equal(updatedDays[0].plannedExercises[1], mesocycleDays[0].plannedExercises[1]);
   assert.equal(updatedDays[1], mesocycleDays[1]);

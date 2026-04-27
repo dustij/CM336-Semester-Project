@@ -8,7 +8,7 @@ import type {
   ExerciseCatalogPage,
   ExerciseFilterOptions,
 } from '@/lib/core/types';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type ExerciseCatalogClientProps = {
   filters: ExerciseCatalogFilters;
@@ -21,12 +21,9 @@ export function ExerciseCatalogClient({
   filterOptions,
   initialPage,
 }: ExerciseCatalogClientProps) {
-  const [loadingFilters, setLoadingFilters] = useState(false);
   const listKey = [filters.q, filters.equipment, filters.muscleGroup].join('|');
-
-  useEffect(() => {
-    setLoadingFilters(false);
-  }, [listKey]);
+  const [loadingListKey, setLoadingListKey] = useState<string | null>(null);
+  const loadingFilters = loadingListKey === listKey;
 
   return (
     <main className="bg-my-background flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -38,7 +35,7 @@ export function ExerciseCatalogClient({
           <ExerciseFilterDialog
             filters={filters}
             filterOptions={filterOptions}
-            onNavigateStart={() => setLoadingFilters(true)}
+            onNavigateStart={() => setLoadingListKey(listKey)}
           />
         </div>
       </div>

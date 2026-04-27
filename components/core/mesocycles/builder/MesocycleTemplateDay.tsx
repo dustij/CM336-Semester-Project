@@ -23,6 +23,7 @@ import {
   EllipsisVertical,
   Trash,
 } from 'lucide-react';
+import { useState } from 'react';
 import MuscleGroupDialog from './MuscleGroupDialog';
 import PlannedExerciseCard from './PlannedExerciseCard';
 
@@ -52,6 +53,11 @@ type MesocycleTemplateDayProps = {
     dayIndex: number,
     plannedExerciseIndex: number
   ) => void;
+  onChangePlannedExerciseMuscleGroup: (
+    dayIndex: number,
+    plannedExerciseIndex: number,
+    muscleGroup: string
+  ) => void;
 };
 
 export default function MesocycleTemplateDay({
@@ -69,7 +75,30 @@ export default function MesocycleTemplateDay({
   onPlannedExerciseChange,
   onRemoveDay,
   onRemovePlannedExercise,
+  onChangePlannedExerciseMuscleGroup,
 }: MesocycleTemplateDayProps) {
+  const [changePlannedExerciseIndex, setChangePlannedExerciseIndex] = useState<
+    number | null
+  >(null);
+  const isChangeDialogOpen = changePlannedExerciseIndex != null;
+
+  const handleChangeExercise = (muscleGroup: string) => {
+    if (changePlannedExerciseIndex == null) {
+      return;
+    }
+
+    if (day.plannedExercises[changePlannedExerciseIndex] == null) {
+      setChangePlannedExerciseIndex(null);
+      return;
+    }
+
+    onChangePlannedExerciseMuscleGroup(
+      dayIndex,
+      changePlannedExerciseIndex,
+      muscleGroup
+    );
+  };
+
   return (
     <div className="min-w-[300px]">
       <div className="flex items-center justify-between bg-white p-2.5">
@@ -136,6 +165,7 @@ export default function MesocycleTemplateDay({
             isMoveUpDisabled={plannedIndex === 0}
             value={planned}
             key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
+            onChangeExercise={() => setChangePlannedExerciseIndex(plannedIndex)}
             onMoveDown={() =>
               onMovePlannedExercise(dayIndex, plannedIndex, plannedIndex + 1)
             }
@@ -153,6 +183,19 @@ export default function MesocycleTemplateDay({
           />
         ))}
       </div>
+      <MuscleGroupDialog
+        description="Select a new muscle group for this planned exercise."
+        muscleGroups={muscleGroups}
+        open={isChangeDialogOpen}
+        showTrigger={false}
+        title="Change muscle group"
+        onOpenChange={(open) => {
+          if (!open) {
+            setChangePlannedExerciseIndex(null);
+          }
+        }}
+        onSelect={handleChangeExercise}
+      />
       {/* Add muscle group */}
       <div className="bg-gray-100 p-2.5">
         <div className="border-border flex h-[60px] items-center justify-center rounded-[8px] border-2 border-dashed">

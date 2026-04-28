@@ -1,5 +1,10 @@
 USE MESOCYCLE_PLANNER;
 
 SELECT *
-FROM USER
-WHERE USER_ID = ?;
+FROM users
+WHERE user_id = ?;
+
+SELECT *
+FROM user u, mesocycle_template m
+WHERE u.user_id = m.created_by_user_id
+AND m.template_id = ?;

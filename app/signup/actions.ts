@@ -1,13 +1,11 @@
 'use server';
 
-import * as db from '@/db/db';
-import { queries } from '@/db/sql';
+import { createUser } from '@/db/repository/users_repository';
 import bcrypt from 'bcrypt';
 import * as z from 'zod';
 
 import { FormState, SignupFormSchema } from '@/lib/core/form-definitions';
 import { createSession } from '@/lib/session';
-import { QueryResult, ResultSetHeader } from 'mysql2';
 import { redirect } from 'next/navigation';
 
 type MySqlError = {
@@ -44,15 +42,12 @@ export async function signup(
 
   // 2. Prepare data for insertion into database
   const { name, email, password } = validatedFields.data;
-  // e.g. Hash the user's password before storing it
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // 3. Insert the user into the database
-  // INSERT INTO users (email, display_name, password_hash)
-  // VALUES (?, ?, ?)
-  let result: QueryResult;
+  let userId: number;
   try {
-    result = await db.query(queries.insertUser, [email, name, hashedPassword]);
+    userId = await createUser({ email, name, passwordHash: hashedPassword });
   } catch (error) {
     if (isDuplicateEntryError(error)) {
       return {
@@ -70,7 +65,6 @@ export async function signup(
   }
 
   // 4. Create user session
-  const userId = (result as ResultSetHeader).insertId;
   await createSession(userId);
 
   // 5. Redirect user

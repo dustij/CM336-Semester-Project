@@ -1,6 +1,6 @@
 import { logout } from '@/app/(main)/actions';
 import { LogOutIcon, UserCircle } from 'lucide-react';
-import { Button } from '../ui/button';
+import { buttonVariants } from '../ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,19 +8,25 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
+const AVATAR_MENU_TRIGGER_ID = 'avatar-menu-trigger';
+const AVATAR_MENU_CONTENT_ID = 'avatar-menu-content';
+
 export const AvatarDropdown = () => {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-xl"
-          className="cursor-pointer rounded-full"
-        >
-          <UserCircle className="text-body size-[24px]" />
-        </Button>
+      <DropdownMenuTrigger
+        id={AVATAR_MENU_TRIGGER_ID}
+        className={buttonVariants({
+          variant: 'ghost',
+          size: 'icon-xl',
+          className: 'cursor-pointer rounded-full',
+        })}
+      >
+        <UserCircle className="text-body size-[24px]" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
+        id={AVATAR_MENU_CONTENT_ID}
+        aria-labelledby={AVATAR_MENU_TRIGGER_ID}
         align="end"
         className="border-border w-auto bg-white"
       >

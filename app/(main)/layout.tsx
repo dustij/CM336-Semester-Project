@@ -3,11 +3,7 @@ import Header from '@/components/layout/Header';
 import { verifySession } from '@/lib/session';
 import { Suspense } from 'react';
 
-function MainShell({
-  children,
-}: {
-  children?: React.ReactNode;
-}) {
+function MainShell({ children }: { children?: React.ReactNode }) {
   return (
     <main className="bg-background h-dvh overflow-hidden">
       <div className="bg-my-background mx-auto flex h-full w-full max-w-[393px] flex-col overflow-hidden">
@@ -37,7 +33,7 @@ export default function layout({
   children: React.ReactNode;
 }>) {
   return (
-    <Suspense fallback={<MainShell />}>
+    <Suspense fallback={null}>
       <AuthenticatedMainLayout>{children}</AuthenticatedMainLayout>
     </Suspense>
   );

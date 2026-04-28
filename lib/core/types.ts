@@ -22,6 +22,31 @@ export type ExerciseListItem = {
   equipment: string;
 };
 
+export type ExerciseCatalogListItem = {
+  id: number;
+  name: string;
+  equipment: string;
+  muscleGroup: string;
+};
+
+export type ExerciseCatalogPage = {
+  exercises: ExerciseCatalogListItem[];
+  limit: number;
+  offset: number;
+  nextOffset: number | null;
+};
+
+export type ExerciseCatalogFilters = {
+  q?: string;
+  equipment?: string;
+  muscleGroup?: string;
+};
+
+export type ExerciseFilterOptions = {
+  equipment: string[];
+  muscleGroups: string[];
+};
+
 export type ExercisesByMuscleGroup = Record<string, ExerciseListItem[]>;
 
 export type PlannedExercisePlan = {
@@ -54,4 +79,19 @@ export type PerformedExercise = {
   completed: boolean;
   notes: string | null;
   sets: PerformedSet[];
+};
+
+export type PlannedExerciseDraft = {
+  id: number | null;
+  name: string | null;
+  equipment: string | null;
+  exerciseOrder: number;
+  exerciseType: string;
+  muscleGroup: string;
+};
+
+export type MesocycleDayDraft = {
+  dayOfWeek: Weekday | null;
+  dayOrder: number;
+  plannedExercises: PlannedExerciseDraft[];
 };

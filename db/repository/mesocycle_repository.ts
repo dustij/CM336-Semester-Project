@@ -4,6 +4,7 @@ import * as db from '@/db/server/db';
 import {
   insertMesocycleTemplate,
   selectMesocycleListByUser,
+  updateMesocycleTemplateTitle,
 } from '@/db/sql/ts/mesocycle_template/query';
 import { insertPlannedExercise } from '@/db/sql/ts/planned_exercise/query';
 import { insertTemplateDay } from '@/db/sql/ts/template_day/query';
@@ -23,6 +24,12 @@ export type CreateMesocycleTemplateInput = {
       exerciseId: number;
     }[];
   }[];
+};
+
+export type RenameMesocycleTemplateInput = {
+  userId: number;
+  templateId: number;
+  newTitle: string;
 };
 
 export async function getCurrentMesocycle(userId: number) {
@@ -88,4 +95,22 @@ export async function createMesocycleTemplate({
 
     return templateId;
   });
+}
+
+export async function setMesocycleTemplateAsCurrent(templateId: number) {
+  void templateId;
+}
+
+export async function renameMesocycleTemplate(
+  input: RenameMesocycleTemplateInput
+) {
+  const result = (await db.query(updateMesocycleTemplateTitle, [
+    input.newTitle,
+    input.templateId,
+    input.userId,
+  ])) as ResultSetHeader;
+
+  if (result.affectedRows !== 1) {
+    throw new Error('Mesocycle template not found.');
+  }
 }

@@ -14,3 +14,11 @@ WHERE created_by_user_id = ?
   AND is_deleted = FALSE
 ORDER BY template_id DESC
 `;
+
+export const updateMesocycleTemplateTitle = `
+UPDATE mesocycle_template
+SET title = ?
+WHERE template_id = ?
+  AND created_by_user_id = ?
+  AND is_deleted = FALSE
+`;

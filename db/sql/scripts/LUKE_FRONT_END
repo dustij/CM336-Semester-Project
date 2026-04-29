@@ -38,3 +38,17 @@ FROM user u, mesocycle_instance m
 WHERE u.user_id = m.user_id
 AND m.template_id = ?;
 
+SELECT *, COUNT(p.planned_exercise_id)
+FROM template_day t, planned_exercise p
+WHERE t.template_day_id = p.template_day_id
+GROUP BY p.planned_exercise_id;
+
+SELECT *, COUNT(i.instance_day_id)
+FROM template_day t, instance_day i
+WHERE t.template_day_id = i.instance_day_id
+GROUP BY i.instance_day_id;
+
+SELECT *, COUNT(i.instance_id)
+FROM mesocycle_template t, mesocycle_instance i
+WHERE t.template_id = i.template_id
+GROUP BY i.instance_id;

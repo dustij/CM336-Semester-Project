@@ -61,15 +61,24 @@ GROUP BY i.instance_id;
 SELECT *, COUNT(e.exercise_id)
 FROM user u, exercise e
 WHERE u.user_id = e.created_by_user_id
-GROUP BY e.exercise_id
+GROUP BY e.exercise_id;
 
 SELECT *, COUNT(e.muscle_group_id)
 FROM user u, exercise e
 WHERE u.user_id = e.created_by_user_id
-GROUP BY e.muscle_group_id
+GROUP BY e.muscle_group_id;
 
 SELECT *, COUNT(e.equipment_id)
 FROM user u, exercise e
 WHERE u.user_id = e.created_by_user_id
-GROUP BY e.equipment_id
+GROUP BY e.equipment_id;
 
+SELECT *, COUNT(p.performed_exercise_id)
+FROM instance_day i, performed_exercise p
+WHERE i.instance_day_id = p.instance_day_id
+GROUP BY p.performed_exercise_id;
+
+SELECT *, COUNT(i.instance_day_id)
+FROM mesocycle_instance m, instance_day i
+WHERE m.instance_id = i.instance_id
+GROUP BY i.instance_day_id;

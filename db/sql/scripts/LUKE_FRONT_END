@@ -13,3 +13,17 @@ SELECT *
 FROM planned_exercise pl, performed exercise pf
 WHERE pf.status = 'SKIPPED';
 
+SELECT *
+FROM mesocycle_template
+WHERE duration_weeks = ?;
+
+SELECT *
+FROM exercise e, equipment eq
+WHERE e.equipment_id = eq.equipment_id
+GROUP BY eq.equipment id;
+
+SELECT e.exercise_id, SUM(e.exercise_id)
+FROM p.planned_exercise, e.exercise
+WHERE p.exercise_id = e.exercise_id
+GROUP BY e.exercise_id
+

@@ -17,10 +17,15 @@ SELECT *
 FROM mesocycle_template
 WHERE duration_weeks = ?;
 
-SELECT *
+SELECT *, COUNT(eq.equipment_id)
 FROM exercise e, equipment eq
 WHERE e.equipment_id = eq.equipment_id
-GROUP BY eq.equipment id;
+GROUP BY eq.equipment_id;
+
+SELECT *, COUNT(m.muscle_group_id)
+FROM exercise e, muscle_group m
+WHERE e.muscle_group_id = m.muscle_group_id
+GROUP BY m.muscle_group_id;
 
 SELECT e.exercise_id, COUNT(e.exercise_id)
 FROM planned_exercise p, exercise e
@@ -52,3 +57,19 @@ SELECT *, COUNT(i.instance_id)
 FROM mesocycle_template t, mesocycle_instance i
 WHERE t.template_id = i.template_id
 GROUP BY i.instance_id;
+
+SELECT *, COUNT(e.exercise_id)
+FROM user u, exercise e
+WHERE u.user_id = e.created_by_user_id
+GROUP BY e.exercise_id
+
+SELECT *, COUNT(e.muscle_group_id)
+FROM user u, exercise e
+WHERE u.user_id = e.created_by_user_id
+GROUP BY e.muscle_group_id
+
+SELECT *, COUNT(e.equipment_id)
+FROM user u, exercise e
+WHERE u.user_id = e.created_by_user_id
+GROUP BY e.equipment_id
+

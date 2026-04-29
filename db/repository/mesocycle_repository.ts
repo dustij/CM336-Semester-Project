@@ -46,6 +46,8 @@ export async function getMesocycleList(
     return result.map((template) => ({
       id: template.id,
       title: template.title,
+      durationWeeks: template.duration_weeks,
+      daysPerWeek: template.days_per_week,
     }));
   } catch (error) {
     console.error('Failed to fetch mesocycle list.', error);

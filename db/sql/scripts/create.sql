@@ -161,3 +161,22 @@ CREATE TABLE performed_set (
   CONSTRAINT chk_performed_set_reps CHECK (reps >= 0),
   CONSTRAINT uq_performed_set_order UNIQUE (performed_exercise_id, set_order)
 );
+
+DELIMITER $
+CREATE FUNCTION getDaysPerWeekInTemplate
+(
+  p_template_id INT
+)
+RETURNS TINYINT
+READS SQL DATA
+BEGIN 
+  DECLARE var_num_days TINYINT;
+
+  SELECT COUNT(*)
+  INTO var_num_days
+  FROM template_day
+  WHERE template_id = p_template_id;
+
+  RETURN var_num_days;
+END $
+ DELIMITER ;

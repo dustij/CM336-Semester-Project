@@ -7,8 +7,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Copy, EllipsisVertical, Pencil, Timer, Trash } from 'lucide-react';
+import {
+  Copy,
+  EllipsisVertical,
+  Eye,
+  Pencil,
+  Timer,
+  Trash,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import RenameMesocycleDialog from './RenameMesocycleDialog';
 
 type MesocycleCardProps = {
@@ -23,6 +31,7 @@ export default function MesocycleCard({
   duration_weeks,
   days_per_week,
 }: MesocycleCardProps) {
+  const router = useRouter();
   const [titleState, setTitleState] = useState(title);
   const [savedTitle, setSavedTitle] = useState(title);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -48,6 +57,9 @@ export default function MesocycleCard({
   const handleStartNewInstance = () => {};
   const handleDuplicateTemplate = () => {};
   const handleRemoveTemplate = () => {};
+  const handleViewTemplate = () => {
+    router.push(`/mesocycles/${id}`);
+  };
 
   return (
     <>
@@ -91,6 +103,10 @@ export default function MesocycleCard({
               <DropdownMenuItem onClick={handleRenameTemplate}>
                 <Pencil className="size-4" />
                 Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleViewTemplate}>
+                <Eye className="size-4" />
+                View
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleDuplicateTemplate}>
                 <Copy className="size-4" />

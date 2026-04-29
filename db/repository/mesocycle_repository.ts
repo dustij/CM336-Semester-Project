@@ -4,15 +4,34 @@ import * as db from '@/db/server/db';
 import {
   insertMesocycleTemplate,
   selectMesocycleListByUser,
+  selectMesocycleTemplateById,
   updateMesocycleTemplateTitle,
 } from '@/db/sql/ts/mesocycle_template/query';
 import { insertPlannedExercise } from '@/db/sql/ts/planned_exercise/query';
 import { insertTemplateDay } from '@/db/sql/ts/template_day/query';
-import type { MesocycleListItem, Weekday } from '@/lib/core/types';
+import type {
+  MesocycleDayDraft,
+  MesocycleListItem,
+  Weekday,
+} from '@/lib/core/types';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { cacheLife, cacheTag } from 'next/cache';
 
 type MesocycleListRow = RowDataPacket & MesocycleListItem;
+type MesocycleTemplateRow = RowDataPacket & {
+  template_id: number;
+  title: string;
+  duration_weeks: number;
+  template_day_id: number | null;
+  day_of_week: Weekday | null;
+  day_order: number | null;
+  planned_exercise_id: number | null;
+  exercise_order: number | null;
+  exercise_id: number | null;
+  exercise_name: string | null;
+  equipment: string | null;
+  muscle_group: string | null;
+};
 
 export type CreateMesocycleTemplateInput = {
   userId: number;
@@ -30,6 +49,13 @@ export type RenameMesocycleTemplateInput = {
   userId: number;
   templateId: number;
   newTitle: string;
+};
+
+export type MesocycleTemplateDetail = {
+  id: number;
+  title: string;
+  durationWeeks: number;
+  days: MesocycleDayDraft[];
 };
 
 export async function getCurrentMesocycle(userId: number) {
@@ -95,6 +121,81 @@ export async function createMesocycleTemplate({
 
     return templateId;
   });
+}
+
+export async function getMesocycleTemplate(
+  userId: number,
+  templateId: number
+): Promise<MesocycleTemplateDetail | null> {
+  'use cache';
+  cacheTag(`mesocycles:user:${userId}`);
+  cacheLife('max');
+
+  try {
+    const rows = (await db.query(selectMesocycleTemplateById, [
+      templateId,
+      userId,
+    ])) as MesocycleTemplateRow[];
+
+    const template = rows[0];
+
+    if (template == null) {
+      return null;
+    }
+
+    const daysById = new Map<number, MesocycleDayDraft>();
+
+    for (const row of rows) {
+      if (
+        row.template_day_id == null ||
+        row.day_of_week == null ||
+        row.day_order == null
+      ) {
+        continue;
+      }
+
+      const day =
+        daysById.get(row.template_day_id) ??
+        ({
+          dayOfWeek: row.day_of_week,
+          dayOrder: row.day_order,
+          plannedExercises: [],
+        } satisfies MesocycleDayDraft);
+
+      if (!daysById.has(row.template_day_id)) {
+        daysById.set(row.template_day_id, day);
+      }
+
+      if (
+        row.exercise_id == null ||
+        row.exercise_order == null ||
+        row.muscle_group == null
+      ) {
+        continue;
+      }
+
+      day.plannedExercises.push({
+        id: row.exercise_id,
+        name: row.exercise_name,
+        equipment: row.equipment,
+        exerciseOrder: row.exercise_order,
+        exerciseType: '',
+        muscleGroup: row.muscle_group,
+      });
+    }
+
+    return {
+      id: template.template_id,
+      title: template.title,
+      durationWeeks: template.duration_weeks,
+      days: Array.from(daysById.values()).sort(
+        (a, b) => a.dayOrder - b.dayOrder
+      ),
+    };
+  } catch (error) {
+    console.error('Failed to fetch mesocycle template.', error);
+    return null;
+  }
 }
 
 export async function setMesocycleTemplateAsCurrent(templateId: number) {

@@ -34,6 +34,7 @@ type MesocycleTemplateDayProps = {
   exercisesByMuscleGroup: ExercisesByMuscleGroup;
   isDuplicateDisabled: boolean;
   muscleGroups: MuscleGroup[];
+  readOnly?: boolean;
   onAddMuscleGroup: (dayIndex: number, muscleGroup: string) => void;
   onDayChange: (dayIndex: number, dayOfWeek: Weekday | null) => void;
   onDuplicateDay: (dayIndex: number) => void;
@@ -67,6 +68,7 @@ export default function MesocycleTemplateDay({
   exercisesByMuscleGroup,
   isDuplicateDisabled,
   muscleGroups,
+  readOnly = false,
   onAddMuscleGroup,
   onDayChange,
   onDuplicateDay,
@@ -102,58 +104,69 @@ export default function MesocycleTemplateDay({
   return (
     <div className="min-w-[300px]">
       <div className="flex items-center justify-between bg-white p-2.5">
-        <div className="h-[40px] max-w-38">
-          <DayComboBox
-            value={day.dayOfWeek}
-            onValueChange={(dayOfWeek) => onDayChange(dayIndex, dayOfWeek)}
-          />
+        <div className="max-w-38">
+          {!readOnly ? (
+            <div className="h-[40px]">
+              <DayComboBox
+                value={day.dayOfWeek}
+                onValueChange={(dayOfWeek) => onDayChange(dayIndex, dayOfWeek)}
+              />
+            </div>
+          ) : (
+            <p className="text-body text-lg leading-tight font-semibold">
+              {day.dayOfWeek}
+            </p>
+          )}
         </div>
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-xl" aria-label="Day options">
-                <EllipsisVertical className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-36">
-              <DropdownMenuItem
-                disabled={dayIndex === 0}
-                onClick={() => onMoveDay(dayIndex, dayIndex - 1)}
-              >
-                <ArrowLeft className="size-4" />
-                Move left
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={dayIndex === dayCount - 1}
-                onClick={() => onMoveDay(dayIndex, dayIndex + 1)}
-              >
-                <ArrowRight className="size-4" />
-                Move right
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={isDuplicateDisabled}
-                onClick={() => onDuplicateDay(dayIndex)}
-              >
-                <Copy className="size-4" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={dayCount === 1}
-                onClick={() => onRemoveDay(dayIndex)}
-              >
-                <Trash className="size-4" />
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {!readOnly && (
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-xl" aria-label="Day options">
+                  <EllipsisVertical className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-36">
+                <DropdownMenuItem
+                  disabled={dayIndex === 0}
+                  onClick={() => onMoveDay(dayIndex, dayIndex - 1)}
+                >
+                  <ArrowLeft className="size-4" />
+                  Move left
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={dayIndex === dayCount - 1}
+                  onClick={() => onMoveDay(dayIndex, dayIndex + 1)}
+                >
+                  <ArrowRight className="size-4" />
+                  Move right
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={isDuplicateDisabled}
+                  onClick={() => onDuplicateDay(dayIndex)}
+                >
+                  <Copy className="size-4" />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={dayCount === 1}
+                  onClick={() => onRemoveDay(dayIndex)}
+                >
+                  <Trash className="size-4" />
+                  Remove
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
       {/* List planned exercises */}
       <div
         className={cn(
           'flex flex-col gap-2.5 bg-gray-100 px-2.5',
-          day.plannedExercises.length > 0 && 'pt-2.5'
+          day.plannedExercises.length > 0 && 'pt-2.5',
+          readOnly && 'pb-2.5'
         )}
       >
         {day.plannedExercises.map((planned, plannedIndex) => (
@@ -163,6 +176,7 @@ export default function MesocycleTemplateDay({
               plannedIndex === day.plannedExercises.length - 1
             }
             isMoveUpDisabled={plannedIndex === 0}
+            readOnly={readOnly}
             value={planned}
             key={`${planned.muscleGroup}-${planned.exerciseOrder}`}
             onChangeExercise={() => setChangePlannedExerciseIndex(plannedIndex)}
@@ -183,28 +197,34 @@ export default function MesocycleTemplateDay({
           />
         ))}
       </div>
-      <MuscleGroupDialog
-        description="Select a new muscle group for this planned exercise."
-        muscleGroups={muscleGroups}
-        open={isChangeDialogOpen}
-        showTrigger={false}
-        title="Change muscle group"
-        onOpenChange={(open) => {
-          if (!open) {
-            setChangePlannedExerciseIndex(null);
-          }
-        }}
-        onSelect={handleChangeExercise}
-      />
+      {!readOnly && (
+        <MuscleGroupDialog
+          description="Select a new muscle group for this planned exercise."
+          muscleGroups={muscleGroups}
+          open={isChangeDialogOpen}
+          showTrigger={false}
+          title="Change muscle group"
+          onOpenChange={(open) => {
+            if (!open) {
+              setChangePlannedExerciseIndex(null);
+            }
+          }}
+          onSelect={handleChangeExercise}
+        />
+      )}
       {/* Add muscle group */}
-      <div className="bg-gray-100 p-2.5">
-        <div className="border-border flex h-[60px] items-center justify-center rounded-[8px] border-2 border-dashed">
-          <MuscleGroupDialog
-            muscleGroups={muscleGroups}
-            onSelect={(muscleGroup) => onAddMuscleGroup(dayIndex, muscleGroup)}
-          />
+      {!readOnly && (
+        <div className="bg-gray-100 p-2.5">
+          <div className="border-border flex h-[60px] items-center justify-center rounded-[8px] border-2 border-dashed">
+            <MuscleGroupDialog
+              muscleGroups={muscleGroups}
+              onSelect={(muscleGroup) =>
+                onAddMuscleGroup(dayIndex, muscleGroup)
+              }
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

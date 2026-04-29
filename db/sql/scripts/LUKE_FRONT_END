@@ -8,3 +8,8 @@ SELECT *
 FROM user u, mesocycle_template m
 WHERE u.user_id = m.created_by_user_id
 AND m.template_id = ?;
+
+SELECT * 
+FROM planned_exercise pl, performed exercise pf
+WHERE pf.status = 'SKIPPED';
+

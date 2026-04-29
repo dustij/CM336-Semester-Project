@@ -9,19 +9,19 @@ import type {
   Weekday,
 } from '@/lib/core/types';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import FinalizeMesocycleDialog from './FinalizeMesocycleDialog';
 import MesocycleTemplateDay from './MesocycleTemplateDay';
 import {
   addDayToMesocycleTemplate,
   addMuscleGroupToDay,
+  changePlannedExerciseMuscleGroupInDay,
   duplicateDayInMesocycleTemplate,
   moveDayInMesocycleTemplate,
   movePlannedExerciseInDay,
   removeDayFromMesocycleTemplate,
   removePlannedExerciseFromDay,
-  changePlannedExerciseMuscleGroupInDay,
   updateMesocycleDayOfWeek,
   updatePlannedExerciseInDay,
 } from './state';
@@ -39,6 +39,13 @@ export default function NewMesocyclePage({
   const [mesocycleDays, setMesocycleDays] = useState<MesocycleDayDraft[]>([
     { dayOfWeek: null, dayOrder: 0, plannedExercises: [] },
   ]);
+
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Reset the exercises when leaving page
+    setMesocycleDays([{ dayOfWeek: null, dayOrder: 0, plannedExercises: [] }]);
+  }, [pathname]);
 
   const isMaxDays = mesocycleDays.length >= 7;
   const daySet = new Set<Weekday>();

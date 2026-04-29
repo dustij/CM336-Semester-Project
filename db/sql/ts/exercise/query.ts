@@ -1,20 +1,5 @@
 import type { ExerciseCatalogFilters } from '@/lib/core/types';
 
-export const createExerciseTable = `
-CREATE TABLE exercise (
-  exercise_id INT AUTO_INCREMENT PRIMARY KEY,
-  equipment_id INT NOT NULL,
-  muscle_group_id INT NOT NULL,
-  created_by_user_id INT NULL,
-  name VARCHAR(150) NOT NULL,
-  CONSTRAINT fk_exercise_equipment FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id),
-  CONSTRAINT fk_exercise_muscle_group FOREIGN KEY (muscle_group_id) REFERENCES muscle_group(muscle_group_id),
-  CONSTRAINT fk_exercise_created_by_user FOREIGN KEY (created_by_user_id) REFERENCES users(user_id)
-    ON DELETE SET NULL,
-  CONSTRAINT uq_exercise_name_equipment_muscle_group UNIQUE (name, equipment_id, muscle_group_id)
-)
-`;
-
 type ExerciseCatalogQueryFilters = ExerciseCatalogFilters & {
   limit?: number;
   offset?: number;

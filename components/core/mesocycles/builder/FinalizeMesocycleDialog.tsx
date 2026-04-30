@@ -30,6 +30,7 @@ import { useActionState, useRef, useState } from 'react';
 
 type FinalizeMesocycleDialogProps = {
   disabled: boolean;
+  initialDurationWeeks?: number;
   mesocycleDays: MesocycleDayDraft[];
 };
 
@@ -39,6 +40,7 @@ const initialState: CreateMesocycleTemplateActionState = {};
 
 export default function FinalizeMesocycleDialog({
   disabled,
+  initialDurationWeeks,
   mesocycleDays,
 }: FinalizeMesocycleDialogProps) {
   const [state, formAction, pending] = useActionState(
@@ -46,7 +48,9 @@ export default function FinalizeMesocycleDialog({
     initialState
   );
   const [title, setTitle] = useState('');
-  const [durationWeeks, setDurationWeeks] = useState<string | null>(null);
+  const [durationWeeks, setDurationWeeks] = useState<string | null>(
+    initialDurationWeeks == null ? null : `${initialDurationWeeks}`
+  );
   const comboboxPortalRef = useRef<HTMLDivElement | null>(null);
   const canCreate = title.trim().length > 0 && durationWeeks != null;
   const templateDays = mesocycleDays.map((day) => ({

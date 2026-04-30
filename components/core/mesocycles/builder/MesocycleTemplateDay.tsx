@@ -113,7 +113,7 @@ export default function MesocycleTemplateDay({
               />
             </div>
           ) : (
-            <p className="text-body text-lg leading-tight font-semibold">
+            <p className="text-body leading-tight font-semibold">
               {day.dayOfWeek}
             </p>
           )}

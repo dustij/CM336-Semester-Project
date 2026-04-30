@@ -1,5 +1,6 @@
 'use client';
 
+import { removeMesocycleTemplateAction } from '@/app/(main)/mesocycles/actions';
 import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,6 +36,7 @@ export default function MesocycleCard({
   const [titleState, setTitleState] = useState(title);
   const [savedTitle, setSavedTitle] = useState(title);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [isRemoved, setIsRemoved] = useState(false);
 
   useEffect(() => {
     setTitleState(title);
@@ -55,11 +57,32 @@ export default function MesocycleCard({
     setTitleState(savedTitle);
   }, [savedTitle]);
   const handleStartNewInstance = () => {};
-  const handleDuplicateTemplate = () => {};
-  const handleRemoveTemplate = () => {};
+  const handleDuplicateTemplate = () => {
+    router.push(`/mesocycles/${id}/duplicate`);
+  };
+  const handleRemoveTemplate = () => {
+    setIsRemoved(true);
+
+    window.setTimeout(() => {
+      void removeMesocycleTemplateAction(id)
+        .then((result) => {
+          if (result.status !== 'success') {
+            setIsRemoved(false);
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to remove mesocycle template.', error);
+          setIsRemoved(false);
+        });
+    }, 0);
+  };
   const handleViewTemplate = () => {
     router.push(`/mesocycles/${id}`);
   };
+
+  if (isRemoved) {
+    return null;
+  }
 
   return (
     <>

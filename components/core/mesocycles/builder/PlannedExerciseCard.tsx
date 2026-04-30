@@ -92,7 +92,7 @@ export default function PlannedExerciseCard({
       </div>
       {readOnly ? (
         <div className="min-w-0">
-          <p className="text-heading truncate text-lg leading-tight">
+          <p className="text-heading truncate leading-tight">
             {value.name ?? selectedExercise?.name ?? 'No exercise selected'}
           </p>
           {(value.equipment ?? selectedExercise?.equipment) && (

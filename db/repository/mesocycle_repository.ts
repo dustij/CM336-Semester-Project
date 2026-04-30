@@ -51,6 +51,11 @@ export type RenameMesocycleTemplateInput = {
   newTitle: string;
 };
 
+export type RemoveMesocycleTemplateInput = {
+  userId: number;
+  templateId: number;
+};
+
 export type MesocycleTemplateDetail = {
   id: number;
   title: string;
@@ -214,4 +219,10 @@ export async function renameMesocycleTemplate(
   if (result.affectedRows !== 1) {
     throw new Error('Mesocycle template not found.');
   }
+}
+
+export async function removeMesocycleTemplate(
+  input: RemoveMesocycleTemplateInput
+) {
+  void input;
 }

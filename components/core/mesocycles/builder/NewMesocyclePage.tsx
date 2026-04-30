@@ -30,12 +30,14 @@ type NewMesocyclePageProps = {
   muscleGroups: MuscleGroup[];
   exercisesByMuscleGroup: ExercisesByMuscleGroup;
   initialMesocycleDays?: MesocycleDayDraft[];
+  initialDurationWeeks?: number;
   readOnly?: boolean;
   title?: string;
 };
 
 export default function NewMesocyclePage({
   exercisesByMuscleGroup,
+  initialDurationWeeks,
   initialMesocycleDays = [
     { dayOfWeek: null, dayOrder: 0, plannedExercises: [] },
   ],
@@ -189,6 +191,7 @@ export default function NewMesocyclePage({
         ) : (
           <FinalizeMesocycleDialog
             disabled={!isValid}
+            initialDurationWeeks={initialDurationWeeks}
             mesocycleDays={mesocycleDays}
           />
         )}

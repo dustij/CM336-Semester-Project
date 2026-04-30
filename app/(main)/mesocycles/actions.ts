@@ -1,6 +1,9 @@
 'use server';
 
-import { renameMesocycleTemplate } from '@/db/repository/mesocycle_repository';
+import {
+  removeMesocycleTemplate,
+  renameMesocycleTemplate,
+} from '@/db/repository/mesocycle_repository';
 import { verifySession } from '@/lib/session';
 import { updateTag } from 'next/cache';
 
@@ -8,6 +11,11 @@ export type RenameMesocycleTemplateActionState = {
   status?: 'success' | 'error';
   message?: string;
   title?: string;
+};
+
+export type RemoveMesocycleTemplateActionState = {
+  status?: 'success' | 'error';
+  message?: string;
 };
 
 const TITLE_MAX_LENGTH = 255;
@@ -56,5 +64,37 @@ export async function renameMesocycleTemplateAction(
   return {
     status: 'success',
     title: newTitle,
+  };
+}
+
+export async function removeMesocycleTemplateAction(
+  templateId: number
+): Promise<RemoveMesocycleTemplateActionState> {
+  const { userId } = await verifySession();
+
+  if (!Number.isInteger(templateId) || templateId <= 0) {
+    return {
+      status: 'error',
+      message: 'Could not find the mesocycle template.',
+    };
+  }
+
+  try {
+    await removeMesocycleTemplate({
+      userId,
+      templateId,
+    });
+  } catch (error) {
+    console.error('Failed to remove mesocycle template.', error);
+    return {
+      status: 'error',
+      message: 'Could not remove the mesocycle. Please try again.',
+    };
+  }
+
+  updateTag(`mesocycles:user:${userId}`);
+
+  return {
+    status: 'success',
   };
 }

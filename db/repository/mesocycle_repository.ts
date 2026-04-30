@@ -5,6 +5,7 @@ import {
   insertMesocycleTemplate,
   selectMesocycleListByUser,
   selectMesocycleTemplateById,
+  setMesocycleTemplateAsDeleted,
   updateMesocycleTemplateTitle,
 } from '@/db/sql/ts/mesocycle_template/query';
 import { insertPlannedExercise } from '@/db/sql/ts/planned_exercise/query';
@@ -217,12 +218,19 @@ export async function renameMesocycleTemplate(
   ])) as ResultSetHeader;
 
   if (result.affectedRows !== 1) {
-    throw new Error('Mesocycle template not found.');
+    throw new Error('Could not update name. Mesocycle template not found.');
   }
 }
 
 export async function removeMesocycleTemplate(
   input: RemoveMesocycleTemplateInput
 ) {
-  void input;
+  const result = (await db.query(setMesocycleTemplateAsDeleted, [
+    input.templateId,
+    input.userId,
+  ])) as ResultSetHeader;
+
+  if (result.affectedRows !== 1) {
+    throw new Error('Could not set as deleted. Mesocycle template not found.');
+  }
 }

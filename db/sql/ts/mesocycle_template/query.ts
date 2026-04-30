@@ -30,3 +30,10 @@ WHERE template_id = ?
   AND created_by_user_id = ?
   AND is_deleted = FALSE
 `;
+
+export const setMesocycleTemplateAsDeleted = `
+UPDATE mesocycle_template
+SET is_deleted = TRUE
+WHERE template_id = ?
+  AND created_by_user_id = ?
+`;

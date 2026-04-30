@@ -9,8 +9,8 @@ import type {
   Weekday,
 } from '@/lib/core/types';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import FinalizeMesocycleDialog from './FinalizeMesocycleDialog';
 import MesocycleTemplateDay from './MesocycleTemplateDay';
 import {
@@ -29,23 +29,26 @@ import {
 type NewMesocyclePageProps = {
   muscleGroups: MuscleGroup[];
   exercisesByMuscleGroup: ExercisesByMuscleGroup;
+  initialMesocycleDays?: MesocycleDayDraft[];
+  initialDurationWeeks?: number;
+  readOnly?: boolean;
+  title?: string;
 };
 
 export default function NewMesocyclePage({
   exercisesByMuscleGroup,
+  initialDurationWeeks,
+  initialMesocycleDays = [
+    { dayOfWeek: null, dayOrder: 0, plannedExercises: [] },
+  ],
   muscleGroups,
+  readOnly = false,
+  title = 'Mesocycle',
 }: NewMesocyclePageProps) {
   const router = useRouter();
   const [mesocycleDays, setMesocycleDays] = useState<MesocycleDayDraft[]>([
-    { dayOfWeek: null, dayOrder: 0, plannedExercises: [] },
+    ...initialMesocycleDays,
   ]);
-
-  const pathname = usePathname();
-
-  useEffect(() => {
-    // Reset the exercises when leaving page
-    setMesocycleDays([{ dayOfWeek: null, dayOrder: 0, plannedExercises: [] }]);
-  }, [pathname]);
 
   const isMaxDays = mesocycleDays.length >= 7;
   const daySet = new Set<Weekday>();
@@ -183,10 +186,15 @@ export default function NewMesocyclePage({
           <ArrowLeft className="size-[18px]" />
           Back
         </Button>
-        <FinalizeMesocycleDialog
-          disabled={!isValid}
-          mesocycleDays={mesocycleDays}
-        />
+        {readOnly ? (
+          <p className="text-body">{title}</p>
+        ) : (
+          <FinalizeMesocycleDialog
+            disabled={!isValid}
+            initialDurationWeeks={initialDurationWeeks}
+            mesocycleDays={mesocycleDays}
+          />
+        )}
       </div>
       <div className="flex min-h-0 min-w-full flex-1 gap-4 overflow-auto px-5">
         {mesocycleDays.map((mDay, i) => (
@@ -198,6 +206,7 @@ export default function NewMesocyclePage({
             exercisesByMuscleGroup={exercisesByMuscleGroup}
             isDuplicateDisabled={isMaxDays}
             muscleGroups={muscleGroups}
+            readOnly={readOnly}
             onAddMuscleGroup={handleAddMuscleGroupToDay}
             onDayChange={handleDayChange}
             onDuplicateDay={handleDuplicateDayInMesocycleTemplate}
@@ -211,18 +220,20 @@ export default function NewMesocyclePage({
             }
           />
         ))}
-        <div className="border-border flex max-h-[60px] min-w-[300px] items-center justify-center rounded-[8px] border-2 border-dashed">
-          <Button
-            variant="ghost"
-            size="lg"
-            className="text-body text-md size-full"
-            disabled={isMaxDays}
-            onClick={handleAddDayToMesocycleTemplate}
-          >
-            <Plus className="size-[20px]" />
-            Add a day
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="border-border flex max-h-[60px] min-w-[300px] items-center justify-center rounded-[8px] border-2 border-dashed">
+            <Button
+              variant="ghost"
+              size="lg"
+              className="text-body text-md size-full"
+              disabled={isMaxDays}
+              onClick={handleAddDayToMesocycleTemplate}
+            >
+              <Plus className="size-[20px]" />
+              Add a day
+            </Button>
+          </div>
+        )}
       </div>
     </main>
   );

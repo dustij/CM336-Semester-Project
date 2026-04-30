@@ -19,6 +19,7 @@ type PlannedExerciseCardProps = {
   exercises: ExerciseListItem[];
   isMoveDownDisabled: boolean;
   isMoveUpDisabled: boolean;
+  readOnly?: boolean;
   value: PlannedExerciseDraft;
   onChangeExercise: () => void;
   onMoveDown: () => void;
@@ -30,6 +31,7 @@ export default function PlannedExerciseCard({
   exercises,
   isMoveDownDisabled,
   isMoveUpDisabled,
+  readOnly = false,
   value,
   onChangeExercise,
   onMoveDown,
@@ -48,55 +50,73 @@ export default function PlannedExerciseCard({
         <div className="bg-my-secondary rounded-[8px] px-2 py-1">
           <p className="text-my-secondary-foreground">{value.muscleGroup}</p>
         </div>
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-xl"
-                aria-label="Planned exercise options"
-              >
-                <EllipsisVertical className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-36">
-              <DropdownMenuItem onClick={onChangeExercise}>
-                <ArrowLeftRight className="size-4" />
-                Change
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={isMoveUpDisabled} onClick={onMoveUp}>
-                <ArrowUp className="size-4" />
-                Move up
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={isMoveDownDisabled}
-                onClick={onMoveDown}
-              >
-                <ArrowDown className="size-4" />
-                Move down
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={onRemove}>
-                <Trash className="size-4" />
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {!readOnly && (
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xl"
+                  aria-label="Planned exercise options"
+                >
+                  <EllipsisVertical className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-36">
+                <DropdownMenuItem onClick={onChangeExercise}>
+                  <ArrowLeftRight className="size-4" />
+                  Change
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={isMoveUpDisabled}
+                  onClick={onMoveUp}
+                >
+                  <ArrowUp className="size-4" />
+                  Move up
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={isMoveDownDisabled}
+                  onClick={onMoveDown}
+                >
+                  <ArrowDown className="size-4" />
+                  Move down
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={onRemove}>
+                  <Trash className="size-4" />
+                  Remove
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </div>
+      {readOnly ? (
+        <div className="min-w-0">
+          <p className="text-heading truncate leading-tight">
+            {value.name ?? selectedExercise?.name ?? 'No exercise selected'}
+          </p>
+          {(value.equipment ?? selectedExercise?.equipment) && (
+            <p className="text-caption truncate text-sm">
+              {value.equipment ?? selectedExercise?.equipment}
+            </p>
+          )}
         </div>
-      </div>
-      <div>
-        <ExerciseComboBox
-          exercises={exercises}
-          value={selectedExercise}
-          onValueChange={(exercise) =>
-            onValueChanged({
-              ...value,
-              id: exercise?.id ?? null,
-              name: exercise?.name ?? null,
-              equipment: exercise?.equipment ?? null,
-            })
-          }
-        />
-      </div>
+      ) : (
+        <div>
+          <ExerciseComboBox
+            exercises={exercises}
+            value={selectedExercise}
+            onValueChange={(exercise) =>
+              onValueChanged({
+                ...value,
+                id: exercise?.id ?? null,
+                name: exercise?.name ?? null,
+                equipment: exercise?.equipment ?? null,
+              })
+            }
+          />
+        </div>
+      )}
     </div>
   );
 }

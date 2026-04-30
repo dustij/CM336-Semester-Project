@@ -184,6 +184,7 @@ END $
 
  CREATE VIEW mesocycle_template_details AS
  SELECT
+  mt.created_by_user_id AS created_by_user_id,
   mt.template_id AS template_id,
   mt.title AS title,
   mt.duration_weeks AS duration_weeks,

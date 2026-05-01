@@ -60,13 +60,6 @@ export type MesocycleTemplateDetail = {
   days: MesocycleDayDraft[];
 };
 
-export async function getCurrentMesocycle(userId: number) {
-  'use cache';
-  cacheTag(`mesocycles:user:${userId}`);
-  cacheLife('max'); // max because we manually invalidate after user selects a mesocycle as current
-  return null;
-}
-
 export async function getMesocycleList(
   userId: number
 ): Promise<MesocycleListItem[]> {

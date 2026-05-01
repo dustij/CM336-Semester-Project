@@ -113,7 +113,6 @@ CREATE TABLE instance_day (
   end_date DATE NULL,
   status ENUM(
     'PLANNED',
-    'IN_PROGRESS',
     'COMPLETED',
     'ABANDONED'
   ) NOT NULL DEFAULT 'PLANNED',

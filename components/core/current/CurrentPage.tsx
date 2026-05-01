@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { getCurrentMesocycle } from '@/db/repository/mesocycle_repository';
+import { getCurrentInstanceDay } from '@/db/repository/current_repository';
 import Link from 'next/link';
 
 export default async function CurrentPage({ userId }: { userId: number }) {
-  const currentMesocycle = await getCurrentMesocycle(userId);
+  const currentMesocycle = await getCurrentInstanceDay(userId);
 
   if (!currentMesocycle) {
     return (
@@ -23,5 +23,17 @@ export default async function CurrentPage({ userId }: { userId: number }) {
     );
   }
 
-  return <main className="bg-my-background"></main>;
+  return (
+    <main className="bg-my-background">
+      <div>
+        <p>id: {currentMesocycle.id}</p>
+        <p>template id: {currentMesocycle.templateDayId}</p>
+        <p>status: {currentMesocycle.status}</p>
+        <p>week number: {currentMesocycle.weekNumber}</p>
+        <p>day order: {currentMesocycle.dayOrder}</p>
+        <p>day of week: {currentMesocycle.dayOfWeek}</p>
+        <p>template title: {currentMesocycle.templateTitle}</p>
+      </div>
+    </main>
+  );
 }

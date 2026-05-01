@@ -113,7 +113,7 @@ export default function RenameMesocycleDialog({
                 type="button"
                 variant="ghost"
                 size="lg"
-                className="text-body px-0 hover:bg-transparent"
+                className="text-body"
                 onClick={() => onOptimisticTitle(savedTitle)}
               >
                 <ArrowLeft className="size-[18px]" />

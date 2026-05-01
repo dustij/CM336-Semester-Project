@@ -11,8 +11,9 @@ import {
   type CurrentInstanceExercise,
   type CurrentInstancePerformedExercise,
 } from '@/db/repository/current_repository';
-import type { Weekday } from '@/lib/core/types';
+import type { ExerciseCatalogListItem, Weekday } from '@/lib/core/types';
 import { EllipsisVertical, SkipForward } from 'lucide-react';
+import { useRef, useState } from 'react';
 import InstanceExerciseCard from './InstanceExerciseCard';
 
 type InstanceDayProps = {
@@ -34,10 +35,47 @@ export default function InstanceDay({
   exercises,
   addedExercises,
 }: InstanceDayProps) {
-  const orderedAddedExercises = [...addedExercises].sort(
-    (a, b) => a.exerciseOrder - b.exerciseOrder
+  const nextLocalExerciseId = useRef(-1);
+  const [localAddedExercises, setLocalAddedExercises] = useState(() =>
+    [...addedExercises].sort((a, b) => a.exerciseOrder - b.exerciseOrder)
   );
-  const totalExercises = exercises.length + orderedAddedExercises.length;
+
+  const exerciseRows = [
+    ...exercises.map((exercise) => ({
+      exercise,
+      key: `planned-${exercise.plannedExerciseId}`,
+      order: exercise.exerciseOrder,
+    })),
+    ...localAddedExercises.map((exercise) => ({
+      exercise,
+      key: `added-${exercise.id}`,
+      order: exercise.exerciseOrder,
+    })),
+  ].sort((a, b) => a.order - b.order);
+
+  const handleAddExerciseBelow = (
+    afterExerciseOrder: number,
+    exercise: ExerciseCatalogListItem
+  ) => {
+    const localExerciseId = nextLocalExerciseId.current--;
+
+    setLocalAddedExercises((currentExercises) => [
+      ...currentExercises,
+      {
+        id: localExerciseId,
+        plannedExerciseId: null,
+        exerciseOrder: afterExerciseOrder + Math.abs(localExerciseId) * 0.01,
+        status: 'ADDED',
+        exercise: {
+          id: exercise.id,
+          name: exercise.name,
+          equipment: exercise.equipment,
+          muscleGroup: exercise.muscleGroup,
+        },
+        sets: [],
+      },
+    ]);
+  };
 
   return (
     <main className="bg-my-background flex flex-1 flex-col items-center">
@@ -63,7 +101,7 @@ export default function InstanceDay({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-36">
               <DropdownMenuItem onClick={() => {}}>
-                <SkipForward className="size-4" />
+                <SkipForward className="mr-2 size-4" />
                 Skip Day
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -71,20 +109,11 @@ export default function InstanceDay({
         </div>
       </div>
       <div className="flex w-full flex-1 flex-col gap-4 overflow-hidden overflow-y-auto px-5">
-        {exercises.map((exercise, index) => (
+        {exerciseRows.map(({ exercise, key }) => (
           <InstanceExerciseCard
-            key={`${currentInstanceDayId}-planned-${exercise.plannedExerciseId}`}
+            key={`${currentInstanceDayId}-${key}`}
             exercise={exercise}
-            isMoveUpDisabled={index === 0}
-            isMoveDownDisabled={index === totalExercises - 1}
-          />
-        ))}
-        {orderedAddedExercises.map((exercise, index) => (
-          <InstanceExerciseCard
-            key={`${currentInstanceDayId}-added-${exercise.id}`}
-            exercise={exercise}
-            isMoveUpDisabled={exercises.length + index === 0}
-            isMoveDownDisabled={exercises.length + index === totalExercises - 1}
+            onAddExerciseBelow={handleAddExerciseBelow}
           />
         ))}
         <div className="mt-1 mb-5">

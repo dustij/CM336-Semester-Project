@@ -1,5 +1,6 @@
 import 'server-only';
 
+import type { ExerciseCatalogListItem } from '@/lib/core/types';
 import type {
   CurrentInstanceDay,
   CurrentInstanceExercise,
@@ -41,6 +42,30 @@ const EXERCISES: Record<number, CurrentInstanceExerciseSnapshot> = {
   2: {
     id: 2,
     name: 'Dumbbell Skullcrusher',
+    equipment: 'Dumbbell',
+    muscleGroup: 'Triceps',
+  },
+  3: {
+    id: 3,
+    name: 'Machine Chest Press',
+    equipment: 'Machine',
+    muscleGroup: 'Chest',
+  },
+  4: {
+    id: 4,
+    name: 'Cable Fly',
+    equipment: 'Cable',
+    muscleGroup: 'Chest',
+  },
+  5: {
+    id: 5,
+    name: 'Cable Triceps Pushdown',
+    equipment: 'Cable',
+    muscleGroup: 'Triceps',
+  },
+  6: {
+    id: 6,
+    name: 'Overhead Triceps Extension',
     equipment: 'Dumbbell',
     muscleGroup: 'Triceps',
   },
@@ -226,6 +251,15 @@ export const deletePerformedExercise =
   currentMockRepository.deletePerformedExercise.bind(currentMockRepository);
 export const completeCurrentInstanceDay =
   currentMockRepository.completeCurrentInstanceDay.bind(currentMockRepository);
+
+export function getCurrentMockExerciseCatalog(): ExerciseCatalogListItem[] {
+  return Object.values(EXERCISES).map((exercise) => ({
+    id: exercise.id,
+    name: exercise.name,
+    equipment: exercise.equipment ?? 'Unknown',
+    muscleGroup: exercise.muscleGroup ?? 'Unknown',
+  }));
+}
 
 function seedCurrentInstance() {
   const previousMonday = createInstanceDay(TEMPLATE_DAYS[0], 1);

@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -14,18 +15,18 @@ import type {
   CurrentInstancePerformedSet,
   CurrentInstancePreviousSet,
 } from '@/db/repository/current_repository';
+import type { ExerciseCatalogListItem } from '@/lib/core/types';
 import { cn } from '@/lib/utils';
 import {
-  ArrowDown,
   ArrowLeftRight,
-  ArrowUp,
   Check,
-  Copy,
+  CirclePlus,
   EllipsisVertical,
-  Plus,
+  SkipForward,
   Trash,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import ReplaceExerciseDialog from './ReplaceExerciseDialog';
 
 type EditableSet = {
   localId: string;
@@ -33,12 +34,15 @@ type EditableSet = {
   weight: string;
   reps: string;
   completed: boolean;
+  status: 'active' | 'skipped';
 };
 
 type InstanceExerciseCardProps = {
   exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise;
-  isMoveDownDisabled: boolean;
-  isMoveUpDisabled: boolean;
+  onAddExerciseBelow: (
+    afterExerciseOrder: number,
+    exercise: ExerciseCatalogListItem
+  ) => void;
 };
 
 const setGridClass =
@@ -46,37 +50,27 @@ const setGridClass =
 
 export default function InstanceExerciseCard({
   exercise,
-  isMoveDownDisabled,
-  isMoveUpDisabled,
+  onAddExerciseBelow,
 }: InstanceExerciseCardProps) {
   const exerciseIdentity = getExerciseIdentity(exercise);
-  const displayExercise = getDisplayExercise(exercise);
+  const originalDisplayExercise = getDisplayExercise(exercise);
+  const [replacementExercise, setReplacementExercise] =
+    useState<ExerciseCatalogListItem | null>(null);
+  const [, setReplacementRepeatsUntilMesocycleEnd] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isReplaceDialogOpen, setIsReplaceDialogOpen] = useState(false);
+  const [isExerciseHidden, setIsExerciseHidden] = useState(false);
   const [sets, setSets] = useState<EditableSet[]>(() =>
     buildInitialSets(exercise, exerciseIdentity)
   );
   const nextDraftSetId = useRef(sets.length + 1);
+  const displayExercise = replacementExercise ?? originalDisplayExercise;
+  const activeSets = sets.filter((set) => set.status === 'active');
 
   const createDraftSetId = () =>
     `${exerciseIdentity}-draft-${nextDraftSetId.current++}`;
 
-  const handleAddSet = () => {
-    setSets((currentSets) => {
-      const lastSet = currentSets.at(-1);
-
-      return renumberSets([
-        ...currentSets,
-        {
-          localId: createDraftSetId(),
-          setOrder: currentSets.length + 1,
-          weight: lastSet?.weight ?? '',
-          reps: lastSet?.reps ?? '',
-          completed: false,
-        },
-      ]);
-    });
-  };
-
-  const handleDuplicateSet = (localId: string) => {
+  const handleAddSetBelow = (localId: string) => {
     setSets((currentSets) => {
       const setIndex = currentSets.findIndex((set) => set.localId === localId);
 
@@ -84,23 +78,38 @@ export default function InstanceExerciseCard({
         return currentSets;
       }
 
-      const setToDuplicate = currentSets[setIndex];
+      const currentSet = currentSets[setIndex];
 
       return renumberSets([
         ...currentSets.slice(0, setIndex + 1),
         {
-          ...setToDuplicate,
           localId: createDraftSetId(),
+          setOrder: currentSet.setOrder + 1,
+          weight: currentSet.weight,
+          reps: currentSet.reps,
           completed: false,
+          status: 'active',
         },
         ...currentSets.slice(setIndex + 1),
       ]);
     });
   };
 
+  const handleSkipSet = (localId: string) => {
+    setSets((currentSets) => {
+      if (getActiveSetCount(currentSets) <= 1) {
+        return currentSets;
+      }
+
+      return currentSets.map((set) =>
+        set.localId === localId ? { ...set, status: 'skipped' } : set
+      );
+    });
+  };
+
   const handleRemoveSet = (localId: string) => {
     setSets((currentSets) => {
-      if (currentSets.length === 1) {
+      if (getActiveSetCount(currentSets) <= 1) {
         return currentSets;
       }
 
@@ -119,155 +128,207 @@ export default function InstanceExerciseCard({
     );
   };
 
+  if (isExerciseHidden) {
+    return null;
+  }
+
   return (
-    // <div className="flex flex-col rounded-[8px] bg-white p-5 shadow ring-1 ring-border/70">
-    <div className="flex flex-col gap-2.5 rounded-[8px] bg-white p-2.5 shadow">
-      <div className="flex items-center justify-between">
-        {/* <div className="flex items-start justify-between gap-3"> */}
-        <div className="bg-my-secondary rounded-[8px] px-2.5 py-1.5">
-          <p className="text-my-secondary-foreground">
-            {/* <p className="text-my-secondary-foreground text-base leading-none font-medium"> */}
-            {displayExercise.muscleGroup ?? 'Exercise'}
+    <>
+      <ReplaceExerciseDialog
+        currentExercise={displayExercise}
+        open={isReplaceDialogOpen}
+        onOpenChange={setIsReplaceDialogOpen}
+        onReplace={(replacement, repeatUntilMesocycleEnd) => {
+          setReplacementExercise(replacement);
+          setReplacementRepeatsUntilMesocycleEnd(repeatUntilMesocycleEnd);
+        }}
+      />
+      <ReplaceExerciseDialog
+        currentExercise={displayExercise}
+        open={isAddDialogOpen}
+        submitLabel="Add"
+        title="Add Exercise"
+        onOpenChange={setIsAddDialogOpen}
+        onReplace={(addedExercise) =>
+          onAddExerciseBelow(getExerciseOrder(exercise), addedExercise)
+        }
+      />
+
+      <div className="flex flex-col gap-2.5 rounded-[8px] bg-white p-2.5 shadow">
+        <div className="flex items-center justify-between">
+          <div className="bg-my-secondary rounded-[8px] px-2.5 py-1.5">
+            <p className="text-my-secondary-foreground">
+              {displayExercise.muscleGroup ?? 'Exercise'}
+            </p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={buttonVariants({ variant: 'ghost', size: 'icon-xl' })}
+              aria-label={`${displayExercise.name} options`}
+            >
+              <EllipsisVertical className="text-body size-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-46 p-1">
+              <DropdownMenuLabel className="bg-muted -mx-1 -mt-1 mb-1 rounded-t-lg px-3 py-2">
+                Exercise
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                className=""
+                onClick={() => setIsReplaceDialogOpen(true)}
+              >
+                <ArrowLeftRight className="mr-2 size-4" />
+                Change exercise
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className=""
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <CirclePlus className="mr-2 size-4" />
+                Add exercise below
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className=""
+                onClick={() => setIsExerciseHidden(true)}
+              >
+                <SkipForward className="mr-2 size-4" />
+                Skip exercise
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                className=""
+                onClick={() => setIsExerciseHidden(true)}
+              >
+                <Trash className="mr-2 size-4" />
+                Delete exercise
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-heading truncate leading-tight">
+            {displayExercise.name}
+          </p>
+          {displayExercise.equipment && (
+            <p className="text-caption truncate text-sm">
+              {displayExercise.equipment}
+            </p>
+          )}
+        </div>
+
+        <div className={cn(setGridClass, 'mt-3')}>
+          <div />
+          <p className="text-body text-center leading-none font-semibold">
+            Weight
+          </p>
+          <p className="text-body text-center leading-none font-semibold">
+            Reps
+          </p>
+          <p className="text-body text-center leading-none font-semibold">
+            Log
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={buttonVariants({ variant: 'ghost', size: 'icon-xl' })}
-            aria-label={`${displayExercise.name} options`}
-          >
-            <EllipsisVertical className="text-body size-5" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-36">
-            <DropdownMenuItem onClick={handleAddSet}>
-              <Plus className="size-4" />
-              Add set
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {}}>
-              <ArrowLeftRight className="size-4" />
-              Change
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={isMoveUpDisabled} onClick={() => {}}>
-              <ArrowUp className="size-4" />
-              Move up
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={isMoveDownDisabled} onClick={() => {}}>
-              <ArrowDown className="size-4" />
-              Move down
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={() => {}}>
-              <Trash className="size-4" />
-              Remove
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
 
-      <div className="min-w-0">
-        <p className="text-heading truncate leading-tight">
-          {displayExercise.name}
-        </p>
-        {displayExercise.equipment && (
-          <p className="text-caption truncate text-sm">
-            {displayExercise.equipment}
-          </p>
-        )}
-      </div>
-
-      <div className={cn(setGridClass, 'mt-3')}>
-        <div />
-        <p className="text-body text-center leading-none font-semibold">
-          Weight
-        </p>
-        <p className="text-body text-center leading-none font-semibold">Reps</p>
-        <p className="text-body text-center leading-none font-semibold">Log</p>
-      </div>
-
-      <div className="mt-0">
-        {sets.map((set, index) => (
-          <div
-            key={set.localId}
-            className={cn(
-              setGridClass,
-              'py-2.5',
-              index > 0 && 'border-border border-t'
-            )}
-          >
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className={buttonVariants({
-                  variant: 'ghost',
-                  size: 'icon-sm',
-                  className: 'text-caption justify-self-start',
-                })}
-                aria-label={`Set ${set.setOrder} options`}
-              >
-                <EllipsisVertical className="size-5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-36">
-                <DropdownMenuItem
-                  onClick={() => handleDuplicateSet(set.localId)}
+        <div className="mt-0">
+          {activeSets.map((set, index) => (
+            <div
+              key={set.localId}
+              className={cn(
+                setGridClass,
+                'py-2.5',
+                index > 0 && 'border-border border-t'
+              )}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={buttonVariants({
+                    variant: 'ghost',
+                    size: 'icon-sm',
+                    className: 'text-caption justify-self-start',
+                  })}
+                  aria-label={`Set ${set.setOrder} options`}
                 >
-                  <Copy className="size-4" />
-                  Duplicate
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  disabled={sets.length === 1}
-                  onClick={() => handleRemoveSet(set.localId)}
-                >
-                  <Trash className="size-4" />
-                  Remove
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <EllipsisVertical className="text-body size-5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-40">
+                  <DropdownMenuLabel className="bg-muted -mx-1 -mt-1 mb-1 rounded-t-lg px-3 py-2">
+                    Set
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    className=""
+                    onClick={() => handleAddSetBelow(set.localId)}
+                  >
+                    <CirclePlus className="mr-2 size-4" />
+                    Add set below
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className=""
+                    disabled={activeSets.length === 1}
+                    onClick={() => handleSkipSet(set.localId)}
+                  >
+                    <SkipForward className="mr-2 size-4" />
+                    Skip set
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    className=""
+                    disabled={activeSets.length === 1}
+                    onClick={() => handleRemoveSet(set.localId)}
+                  >
+                    <Trash className="mr-2 size-4" />
+                    Delete set
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-            <Input
-              aria-label={`Set ${set.setOrder} weight`}
-              inputMode="decimal"
-              type="number"
-              value={set.weight}
-              onChange={(event) =>
-                handleSetChange(set.localId, { weight: event.target.value })
-              }
-              className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center text-xl font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-
-            <Input
-              aria-label={`Set ${set.setOrder} reps`}
-              inputMode="numeric"
-              type="number"
-              value={set.reps}
-              onChange={(event) =>
-                handleSetChange(set.localId, { reps: event.target.value })
-              }
-              className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center text-xl font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-
-            <label className="flex justify-center">
-              <span className="sr-only">Log set {set.setOrder}</span>
-              <input
-                checked={set.completed}
-                className="sr-only"
-                type="checkbox"
+              <Input
+                aria-label={`Set ${set.setOrder} weight`}
+                inputMode="decimal"
+                type="number"
+                value={set.weight}
                 onChange={(event) =>
-                  handleSetChange(set.localId, {
-                    completed: event.target.checked,
-                  })
+                  handleSetChange(set.localId, { weight: event.target.value })
                 }
+                className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center text-xl font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
-              <span
-                className={cn(
-                  'border-border flex size-9 items-center justify-center rounded-[12px] border bg-white transition-colors',
-                  set.completed && 'border-my-primary bg-my-primary'
-                )}
-              >
-                {set.completed && <Check className="size-5 text-white" />}
-              </span>
-            </label>
-          </div>
-        ))}
+
+              <Input
+                aria-label={`Set ${set.setOrder} reps`}
+                inputMode="numeric"
+                type="number"
+                value={set.reps}
+                onChange={(event) =>
+                  handleSetChange(set.localId, { reps: event.target.value })
+                }
+                className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center text-xl font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+
+              <label className="flex justify-center">
+                <span className="sr-only">Log set {set.setOrder}</span>
+                <input
+                  checked={set.completed}
+                  className="sr-only"
+                  type="checkbox"
+                  onChange={(event) =>
+                    handleSetChange(set.localId, {
+                      completed: event.target.checked,
+                    })
+                  }
+                />
+                <span
+                  className={cn(
+                    'border-border flex size-9 items-center justify-center rounded-[12px] border bg-white transition-colors',
+                    set.completed && 'border-my-primary bg-my-primary'
+                  )}
+                >
+                  {set.completed && <Check className="size-5 text-white" />}
+                </span>
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -294,13 +355,17 @@ function buildInitialSets(
   return [createEmptySet(exerciseIdentity, 1)];
 }
 
-function createEmptySet(exerciseIdentity: string, setOrder: number) {
+function createEmptySet(
+  exerciseIdentity: string,
+  setOrder: number
+): EditableSet {
   return {
     localId: `${exerciseIdentity}-empty-${setOrder}`,
     setOrder,
     weight: '',
     reps: '',
     completed: false,
+    status: 'active',
   };
 }
 
@@ -324,6 +389,12 @@ function getExerciseIdentity(
   return `added-${exercise.id}`;
 }
 
+function getExerciseOrder(
+  exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise
+) {
+  return exercise.exerciseOrder;
+}
+
 function isTemplateExercise(
   exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise
 ): exercise is CurrentInstanceExercise {
@@ -341,6 +412,7 @@ function mapPerformedSets(
     weight: String(set.weight),
     reps: String(set.reps),
     completed: preserveCompleted ? set.completed : false,
+    status: 'active' as const,
   }));
 }
 
@@ -354,7 +426,12 @@ function mapPreviousSets(
     weight: String(set.weight),
     reps: String(set.reps),
     completed: false,
+    status: 'active' as const,
   }));
+}
+
+function getActiveSetCount(sets: EditableSet[]) {
+  return sets.filter((set) => set.status === 'active').length;
 }
 
 function renumberSets(sets: EditableSet[]) {

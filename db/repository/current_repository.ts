@@ -263,7 +263,7 @@ export type CompleteCurrentInstanceDayInput = {
 //   "templateDayId": 1,
 //   "weekNumber": 1,
 //   "dayOfWeek": "Monday",
-//   "dayOrder": 0,
+//   "dayOrder": 1,
 //   "status": "PLANNED",
 //   "endDate": null,
 //   "templateTitle": "MT Template",

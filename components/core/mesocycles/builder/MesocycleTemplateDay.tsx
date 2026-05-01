@@ -123,7 +123,7 @@ export default function MesocycleTemplateDay({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon-xl" aria-label="Day options">
-                  <EllipsisVertical className="size-5" />
+                  <EllipsisVertical className="text-body size-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-36">
@@ -131,21 +131,21 @@ export default function MesocycleTemplateDay({
                   disabled={dayIndex === 0}
                   onClick={() => onMoveDay(dayIndex, dayIndex - 1)}
                 >
-                  <ArrowLeft className="size-4" />
+                  <ArrowLeft className="mr-2 size-4" />
                   Move left
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={dayIndex === dayCount - 1}
                   onClick={() => onMoveDay(dayIndex, dayIndex + 1)}
                 >
-                  <ArrowRight className="size-4" />
+                  <ArrowRight className="mr-2 size-4" />
                   Move right
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={isDuplicateDisabled}
                   onClick={() => onDuplicateDay(dayIndex)}
                 >
-                  <Copy className="size-4" />
+                  <Copy className="mr-2 size-4" />
                   Duplicate
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -153,7 +153,7 @@ export default function MesocycleTemplateDay({
                   disabled={dayCount === 1}
                   onClick={() => onRemoveDay(dayIndex)}
                 >
-                  <Trash className="size-4" />
+                  <Trash className="mr-2 size-4" />
                   Remove
                 </DropdownMenuItem>
               </DropdownMenuContent>

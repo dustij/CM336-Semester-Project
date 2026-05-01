@@ -161,30 +161,30 @@ export default function MesocycleCard({
               className={buttonVariants({ variant: 'ghost', size: 'icon-xl' })}
               aria-label="Mesocycle options"
             >
-              <EllipsisVertical className="size-5" />
+              <EllipsisVertical className="text-body size-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-36">
               <DropdownMenuItem onClick={handleStartNewInstance}>
-                <Timer className="size-4" />
+                <Timer className="mr-2 size-4" />
                 Start
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleRenameTemplate}>
-                <Pencil className="size-4" />
+                <Pencil className="mr-2 size-4" />
                 Rename
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleViewTemplate}>
-                <Eye className="size-4" />
+                <Eye className="mr-2 size-4" />
                 View
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleDuplicateTemplate}>
-                <Copy className="size-4" />
+                <Copy className="mr-2 size-4" />
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
                 onClick={handleRemoveTemplate}
               >
-                <Trash className="size-4" />
+                <Trash className="mr-2 size-4" />
                 Remove
               </DropdownMenuItem>
             </DropdownMenuContent>

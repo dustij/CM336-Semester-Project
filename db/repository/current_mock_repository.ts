@@ -29,26 +29,20 @@ type TemplateExerciseDefinition = {
 };
 
 const USER_ID = 1;
-const MOCK_TEMPLATE_TITLE = 'Mock Current Template';
+const MOCK_TEMPLATE_TITLE = 'Upper Body 1';
 
 const EXERCISES: Record<number, CurrentInstanceExerciseSnapshot> = {
-  6: {
-    id: 6,
-    name: 'Alternate Lateral Pulldown',
-    equipment: 'Cable',
-    muscleGroup: 'Back',
-  },
-  9: {
-    id: 9,
-    name: 'Archer Push Up',
-    equipment: 'Body Weight',
+  1: {
+    id: 1,
+    name: 'Bench Press (Incline)',
+    equipment: 'Barbell',
     muscleGroup: 'Chest',
   },
-  15: {
-    id: 15,
-    name: 'Assisted Hanging Knee Raise',
-    equipment: 'Assisted',
-    muscleGroup: 'Waist',
+  2: {
+    id: 2,
+    name: 'Dumbbell Skullcrusher',
+    equipment: 'Dumbbell',
+    muscleGroup: 'Triceps',
   },
 };
 
@@ -63,55 +57,37 @@ const templateExercises: TemplateExerciseDefinition[] = [
     plannedExerciseId: 1,
     templateDayId: 1,
     exerciseOrder: 0,
-    exercise: EXERCISES[6],
+    exercise: EXERCISES[1],
   },
   {
     plannedExerciseId: 2,
     templateDayId: 1,
-    exerciseOrder: 0,
-    exercise: EXERCISES[9],
-  },
-  {
-    plannedExerciseId: 3,
-    templateDayId: 1,
-    exerciseOrder: 0,
-    exercise: EXERCISES[15],
+    exerciseOrder: 1,
+    exercise: EXERCISES[2],
   },
   {
     plannedExerciseId: 1,
     templateDayId: 2,
     exerciseOrder: 0,
-    exercise: EXERCISES[6],
+    exercise: EXERCISES[1],
   },
   {
     plannedExerciseId: 2,
     templateDayId: 2,
-    exerciseOrder: 0,
-    exercise: EXERCISES[9],
-  },
-  {
-    plannedExerciseId: 3,
-    templateDayId: 2,
-    exerciseOrder: 0,
-    exercise: EXERCISES[15],
+    exerciseOrder: 1,
+    exercise: EXERCISES[2],
   },
   {
     plannedExerciseId: 1,
     templateDayId: 3,
     exerciseOrder: 0,
-    exercise: EXERCISES[6],
+    exercise: EXERCISES[1],
   },
   {
     plannedExerciseId: 2,
     templateDayId: 3,
-    exerciseOrder: 0,
-    exercise: EXERCISES[9],
-  },
-  {
-    plannedExerciseId: 3,
-    templateDayId: 3,
-    exerciseOrder: 0,
-    exercise: EXERCISES[15],
+    exerciseOrder: 1,
+    exercise: EXERCISES[2],
   },
 ];
 
@@ -125,11 +101,13 @@ const currentInstance: CurrentMesocycleInstanceDetails = {
   userId: USER_ID,
   title: MOCK_TEMPLATE_TITLE,
   durationWeeks: 3,
-  startDate: new Date('2026-05-01T00:00:00'),
+  startDate: new Date('2026-04-20T00:00:00'),
   endDate: null,
   isCurrent: true,
-  days: [createInstanceDay(TEMPLATE_DAYS[0], 1)],
+  days: [],
 };
+
+seedCurrentInstance();
 
 export const currentMockRepository: CurrentInstanceRepository = {
   async getCurrentMesocycleInstanceDetails(userId) {
@@ -248,6 +226,42 @@ export const deletePerformedExercise =
   currentMockRepository.deletePerformedExercise.bind(currentMockRepository);
 export const completeCurrentInstanceDay =
   currentMockRepository.completeCurrentInstanceDay.bind(currentMockRepository);
+
+function seedCurrentInstance() {
+  const previousMonday = createInstanceDay(TEMPLATE_DAYS[0], 1);
+  previousMonday.status = 'COMPLETED';
+  previousMonday.endDate = new Date('2026-04-20T00:00:00');
+
+  seedPerformedSets(previousMonday.exercises[0], [
+    { weight: 135, reps: 9 },
+    { weight: 135, reps: 9 },
+  ]);
+  seedPerformedSets(previousMonday.exercises[1], [
+    { weight: 50, reps: 10 },
+    { weight: 50, reps: 10 },
+    { weight: 50, reps: 10 },
+  ]);
+
+  currentInstance.days.push(previousMonday);
+  currentInstance.days.push(createInstanceDay(TEMPLATE_DAYS[0], 2));
+}
+
+function seedPerformedSets(
+  exercise: CurrentInstanceExercise,
+  sets: Array<{ weight: number; reps: number }>
+) {
+  const performedExercise = ensurePerformedExercise(exercise, 'COMPLETED');
+
+  performedExercise.sets = sets.map((set, index) => ({
+    id: nextSetId++,
+    setOrder: index + 1,
+    weight: set.weight,
+    reps: set.reps,
+    completed: true,
+  }));
+
+  syncPerformedExercise(exercise, performedExercise);
+}
 
 function createInstanceDay(
   templateDay: TemplateDayDefinition,

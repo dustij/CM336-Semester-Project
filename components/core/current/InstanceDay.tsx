@@ -8,14 +8,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  CurrentInstanceExercise,
-  CurrentInstancePerformedExercise,
+  type CurrentInstanceExercise,
+  type CurrentInstancePerformedExercise,
 } from '@/db/repository/current_repository';
-import { Weekday } from '@/lib/core/types';
+import type { Weekday } from '@/lib/core/types';
 import { EllipsisVertical, SkipForward } from 'lucide-react';
 import InstanceExerciseCard from './InstanceExerciseCard';
 
 type InstanceDayProps = {
+  currentInstanceDayId: number;
   title: string;
   weekNumber: number;
   dayNumber: number;
@@ -25,6 +26,7 @@ type InstanceDayProps = {
 };
 
 export default function InstanceDay({
+  currentInstanceDayId,
   title,
   weekNumber,
   dayNumber,
@@ -32,15 +34,20 @@ export default function InstanceDay({
   exercises,
   addedExercises,
 }: InstanceDayProps) {
+  const orderedAddedExercises = [...addedExercises].sort(
+    (a, b) => a.exerciseOrder - b.exerciseOrder
+  );
+  const totalExercises = exercises.length + orderedAddedExercises.length;
+
   return (
-    <main className="bg-my-background flex flex-1 flex-col items-center justify-center">
+    <main className="bg-my-background flex flex-1 flex-col items-center">
       <div className="flex w-full items-center px-5 py-3.5">
         <div className="flex-1">
           <div>
-            <p className="text-caption text-sm">{title}</p>
+            <p className="text-caption text-sm leading-tight">{title}</p>
           </div>
           <div>
-            <p className="text-body font-semibold">
+            <p className="text-heading leading-tight font-semibold">
               Week {weekNumber} Day {dayNumber} {weekday}
             </p>
           </div>
@@ -63,12 +70,25 @@ export default function InstanceDay({
           </DropdownMenu>
         </div>
       </div>
-      <div className="flex w-full flex-1 flex-col gap-2.5 overflow-hidden overflow-y-auto px-5">
-        {exercises.map((exercise) => (
-          <InstanceExerciseCard key={exercise.exerciseId} />
+      <div className="flex w-full flex-1 flex-col gap-4 overflow-hidden overflow-y-auto px-5">
+        {exercises.map((exercise, index) => (
+          <InstanceExerciseCard
+            key={`${currentInstanceDayId}-planned-${exercise.plannedExerciseId}`}
+            exercise={exercise}
+            isMoveUpDisabled={index === 0}
+            isMoveDownDisabled={index === totalExercises - 1}
+          />
         ))}
-        <div className="mt-2.5 mb-5">
-          <Button className="w-full" size="lg">
+        {orderedAddedExercises.map((exercise, index) => (
+          <InstanceExerciseCard
+            key={`${currentInstanceDayId}-added-${exercise.id}`}
+            exercise={exercise}
+            isMoveUpDisabled={exercises.length + index === 0}
+            isMoveDownDisabled={exercises.length + index === totalExercises - 1}
+          />
+        ))}
+        <div className="mt-1 mb-5">
+          <Button className="h-12 w-full text-base font-semibold" size="lg">
             Finish
           </Button>
         </div>

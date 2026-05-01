@@ -26,6 +26,7 @@ export default async function CurrentPage({ userId }: { userId: number }) {
 
   return (
     <InstanceDay
+      currentInstanceDayId={currentMesocycle.id}
       title={currentMesocycle.templateTitle}
       weekNumber={currentMesocycle.weekNumber}
       dayNumber={currentMesocycle.dayOrder}

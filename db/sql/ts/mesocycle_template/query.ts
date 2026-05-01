@@ -37,3 +37,7 @@ SET is_deleted = TRUE
 WHERE template_id = ?
   AND created_by_user_id = ?
 `;
+
+export const setNewCurrentForUserId = `
+CALL set_new_current_for_user(?,?)
+`;

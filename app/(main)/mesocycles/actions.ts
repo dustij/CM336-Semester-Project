@@ -6,6 +6,7 @@ import {
 } from '@/db/repository/mesocycle_repository';
 import { verifySession } from '@/lib/session';
 import { updateTag } from 'next/cache';
+import { setTimeout } from 'timers/promises';
 
 export type RenameMesocycleTemplateActionState = {
   status?: 'success' | 'error';
@@ -13,7 +14,7 @@ export type RenameMesocycleTemplateActionState = {
   title?: string;
 };
 
-export type RemoveMesocycleTemplateActionState = {
+export type GeneralMesocycleTemplateActionState = {
   status?: 'success' | 'error';
   message?: string;
 };
@@ -69,7 +70,7 @@ export async function renameMesocycleTemplateAction(
 
 export async function removeMesocycleTemplateAction(
   templateId: number
-): Promise<RemoveMesocycleTemplateActionState> {
+): Promise<GeneralMesocycleTemplateActionState> {
   const { userId } = await verifySession();
 
   if (!Number.isInteger(templateId) || templateId <= 0) {
@@ -97,4 +98,21 @@ export async function removeMesocycleTemplateAction(
   return {
     status: 'success',
   };
+}
+
+export async function setNewCurrentAction(
+  templateId: number
+): Promise<GeneralMesocycleTemplateActionState> {
+  await verifySession();
+
+  await setTimeout(2000);
+
+  if (!Number.isInteger(templateId) || templateId <= 0) {
+    return {
+      status: 'error',
+      message: 'Could not find the mesocycle template.',
+    };
+  }
+
+  return { status: 'success' };
 }

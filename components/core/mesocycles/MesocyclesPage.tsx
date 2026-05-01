@@ -43,7 +43,7 @@ export default async function MesocyclesPage({ userId }: { userId: number }) {
               mesocycleList.map((template) => (
                 <MesocycleCard
                   key={`${template.id}-${template.title}`}
-                  id={template.id}
+                  templateId={template.id}
                   title={template.title}
                   duration_weeks={template.durationWeeks}
                   days_per_week={template.daysPerWeek}

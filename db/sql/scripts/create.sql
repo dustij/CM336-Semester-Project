@@ -293,8 +293,6 @@ BEGIN
   );
 
   # implementation notes:
-  # performed exercises are inserted as soon as at least one set is completed
-  # instance days are inserted once the previous day as been comleted
   # instance days for the same template day but on following weeks populate sets from previous week
   
   COMMIT;

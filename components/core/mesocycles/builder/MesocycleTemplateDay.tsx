@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MuscleGroup } from '@/db/repository/muscle_group_repository';
+import type { MuscleGroup } from '@/db/repository/muscle_group_repository';
 import type {
   ExercisesByMuscleGroup,
   MesocycleDayDraft,

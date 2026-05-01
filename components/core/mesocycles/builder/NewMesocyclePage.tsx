@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { MuscleGroup } from '@/db/repository/muscle_group_repository';
+import type { MuscleGroup } from '@/db/repository/muscle_group_repository';
 import type {
   ExercisesByMuscleGroup,
   MesocycleDayDraft,
@@ -9,8 +9,8 @@ import type {
   Weekday,
 } from '@/lib/core/types';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import FinalizeMesocycleDialog from './FinalizeMesocycleDialog';
 import MesocycleTemplateDay from './MesocycleTemplateDay';
 import {
@@ -50,13 +50,12 @@ export default function NewMesocyclePage({
     ...initialMesocycleDays,
   ]);
 
-  // Keep this! I want to clear the builder when navigating away
-  const pathname = usePathname();
+  // const pathname = usePathname();
 
-  useEffect(() => {
-    // Reset the exercises when leaving page
-    setMesocycleDays([{ dayOfWeek: null, dayOrder: 0, plannedExercises: [] }]);
-  }, [pathname]);
+  // useEffect(() => {
+  //   // Reset the exercises when leaving page
+  //   setMesocycleDays([{ dayOfWeek: null, dayOrder: 0, plannedExercises: [] }]);
+  // }, [pathname]);
 
   const isMaxDays = mesocycleDays.length >= 7;
   const daySet = new Set<Weekday>();

@@ -133,7 +133,7 @@ CREATE TABLE performed_exercise (
   exercise_order TINYINT NOT NULL,
   status ENUM(
     'COMPLETED',
-    'SWAPPED',
+    'REPLACED',
     'SKIPPED',
     'ADDED'
   ) NOT NULL DEFAULT 'COMPLETED',
@@ -146,19 +146,19 @@ CREATE TABLE performed_exercise (
 );
 
 
-CREATE TABLE exercise_set (
+CREATE TABLE performed_set (
   set_id INT AUTO_INCREMENT PRIMARY KEY,
   performed_exercise_id INT NOT NULL,
   set_order TINYINT NOT NULL,
   weight INT NOT NULL,
   reps TINYINT NOT NULL,
   is_completed BOOLEAN NOT NULL DEFAULT FALSE,
-  CONSTRAINT fk_exercise_set_exercise FOREIGN KEY (performed_exercise_id) REFERENCES performed_exercise(performed_exercise_id) 
+  CONSTRAINT fk_performed_set_exercise FOREIGN KEY (performed_exercise_id) REFERENCES performed_exercise(performed_exercise_id) 
     ON DELETE CASCADE,
-  CONSTRAINT chk_exercise_set_order CHECK (set_order >= 0),
-  CONSTRAINT chk_exercise_set_weight CHECK (weight >= 0),
-  CONSTRAINT chk_exercise_set_reps CHECK (reps >= 0),
-  CONSTRAINT uq_exercise_set_order UNIQUE (performed_exercise_id, set_order)
+  CONSTRAINT chk_performed_set_order CHECK (set_order >= 0),
+  CONSTRAINT chk_performed_set_weight CHECK (weight >= 0),
+  CONSTRAINT chk_performed_set_reps CHECK (reps >= 0),
+  CONSTRAINT uq_performed_set_order UNIQUE (performed_exercise_id, set_order)
 );
 
 DELIMITER $
@@ -304,3 +304,18 @@ DELIMITER ;
 
 
 SHOW TABLES;
+
+-- // TODO: create trigger in create.sql
+-- // When the current instance_day is updated to either COMPLETED or ABANDONED, the
+-- // database should create the next instance_day for the same mesocycle_instance.
+-- // The next day is determined from the template_day ordering:
+
+-- // - If there is another template_day later in the same week, create an
+-- // instance_day for that template_day with the same week_number.
+
+-- // - If the current day is the last template_day of the week and the mesocycle has
+-- // more weeks remaining, create an instance_day for the first template_day with
+-- // week_number + 1.
+
+-- // - If the current day is the last template_day of the final week, no new
+-- // instance_day is created and the mesocycle_instance can be considered complete.

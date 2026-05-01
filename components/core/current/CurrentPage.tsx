@@ -25,15 +25,7 @@ export default async function CurrentPage({ userId }: { userId: number }) {
 
   return (
     <main className="bg-my-background">
-      <div>
-        <p>id: {currentMesocycle.id}</p>
-        <p>template id: {currentMesocycle.templateDayId}</p>
-        <p>status: {currentMesocycle.status}</p>
-        <p>week number: {currentMesocycle.weekNumber}</p>
-        <p>day order: {currentMesocycle.dayOrder}</p>
-        <p>day of week: {currentMesocycle.dayOfWeek}</p>
-        <p>template title: {currentMesocycle.templateTitle}</p>
-      </div>
+      <div></div>
     </main>
   );
 }

@@ -15,7 +15,10 @@ import type {
   CurrentInstancePerformedSet,
   CurrentInstancePreviousSet,
 } from '@/db/repository/current_repository';
-import type { ExerciseCatalogListItem } from '@/lib/core/types';
+import type {
+  ExerciseCatalogListItem,
+  ExercisesByMuscleGroup,
+} from '@/lib/core/types';
 import { cn } from '@/lib/utils';
 import {
   ArrowLeftRight,
@@ -39,10 +42,19 @@ type EditableSet = {
 
 type InstanceExerciseCardProps = {
   exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise;
+  exerciseOptions: ExerciseOptionsState | null;
+  exerciseOptionsError: string | null;
+  isLoadingExerciseOptions: boolean;
+  loadExerciseOptions: () => Promise<void>;
   onAddExerciseBelow: (
     afterExerciseOrder: number,
     exercise: ExerciseCatalogListItem
   ) => void;
+};
+
+type ExerciseOptionsState = {
+  muscleGroups: string[];
+  exercisesByMuscleGroup: ExercisesByMuscleGroup;
 };
 
 const setGridClass =
@@ -50,6 +62,10 @@ const setGridClass =
 
 export default function InstanceExerciseCard({
   exercise,
+  exerciseOptions,
+  exerciseOptionsError,
+  isLoadingExerciseOptions,
+  loadExerciseOptions,
   onAddExerciseBelow,
 }: InstanceExerciseCardProps) {
   const exerciseIdentity = getExerciseIdentity(exercise);
@@ -69,6 +85,16 @@ export default function InstanceExerciseCard({
 
   const createDraftSetId = () =>
     `${exerciseIdentity}-draft-${nextDraftSetId.current++}`;
+
+  const handleOpenReplaceDialog = () => {
+    setIsReplaceDialogOpen(true);
+    void loadExerciseOptions();
+  };
+
+  const handleOpenAddDialog = () => {
+    setIsAddDialogOpen(true);
+    void loadExerciseOptions();
+  };
 
   const handleAddSetBelow = (localId: string) => {
     setSets((currentSets) => {
@@ -135,7 +161,10 @@ export default function InstanceExerciseCard({
   return (
     <>
       <ReplaceExerciseDialog
-        currentExercise={displayExercise}
+        exercisesByMuscleGroup={exerciseOptions?.exercisesByMuscleGroup ?? {}}
+        loadingOptions={isLoadingExerciseOptions}
+        loadOptionsError={exerciseOptionsError}
+        muscleGroups={exerciseOptions?.muscleGroups ?? []}
         open={isReplaceDialogOpen}
         onOpenChange={setIsReplaceDialogOpen}
         onReplace={(replacement, repeatUntilMesocycleEnd) => {
@@ -144,7 +173,10 @@ export default function InstanceExerciseCard({
         }}
       />
       <ReplaceExerciseDialog
-        currentExercise={displayExercise}
+        exercisesByMuscleGroup={exerciseOptions?.exercisesByMuscleGroup ?? {}}
+        loadingOptions={isLoadingExerciseOptions}
+        loadOptionsError={exerciseOptionsError}
+        muscleGroups={exerciseOptions?.muscleGroups ?? []}
         open={isAddDialogOpen}
         submitLabel="Add"
         title="Add Exercise"
@@ -174,14 +206,14 @@ export default function InstanceExerciseCard({
               </DropdownMenuLabel>
               <DropdownMenuItem
                 className=""
-                onClick={() => setIsReplaceDialogOpen(true)}
+                onClick={handleOpenReplaceDialog}
               >
                 <ArrowLeftRight className="mr-2 size-4" />
                 Change exercise
               </DropdownMenuItem>
               <DropdownMenuItem
                 className=""
-                onClick={() => setIsAddDialogOpen(true)}
+                onClick={handleOpenAddDialog}
               >
                 <CirclePlus className="mr-2 size-4" />
                 Add exercise below

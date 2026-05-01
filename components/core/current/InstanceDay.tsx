@@ -1,5 +1,6 @@
 'use client';
 
+import { getReplaceExerciseOptionsAction } from '@/app/(main)/current/actions';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,7 +12,11 @@ import {
   type CurrentInstanceExercise,
   type CurrentInstancePerformedExercise,
 } from '@/db/repository/current_repository';
-import type { ExerciseCatalogListItem, Weekday } from '@/lib/core/types';
+import type {
+  ExerciseCatalogListItem,
+  ExercisesByMuscleGroup,
+  Weekday,
+} from '@/lib/core/types';
 import { EllipsisVertical, SkipForward } from 'lucide-react';
 import { useRef, useState } from 'react';
 import InstanceExerciseCard from './InstanceExerciseCard';
@@ -24,6 +29,11 @@ type InstanceDayProps = {
   weekday: Weekday;
   exercises: CurrentInstanceExercise[];
   addedExercises: CurrentInstancePerformedExercise[];
+};
+
+type ExerciseOptionsState = {
+  muscleGroups: string[];
+  exercisesByMuscleGroup: ExercisesByMuscleGroup;
 };
 
 export default function InstanceDay({
@@ -39,6 +49,13 @@ export default function InstanceDay({
   const [localAddedExercises, setLocalAddedExercises] = useState(() =>
     [...addedExercises].sort((a, b) => a.exerciseOrder - b.exerciseOrder)
   );
+  const [exerciseOptions, setExerciseOptions] =
+    useState<ExerciseOptionsState | null>(null);
+  const [isLoadingExerciseOptions, setIsLoadingExerciseOptions] =
+    useState(false);
+  const [exerciseOptionsError, setExerciseOptionsError] = useState<
+    string | null
+  >(null);
 
   const exerciseRows = [
     ...exercises.map((exercise) => ({
@@ -77,6 +94,30 @@ export default function InstanceDay({
     ]);
   };
 
+  const loadExerciseOptions = async () => {
+    if (exerciseOptions || isLoadingExerciseOptions) {
+      return;
+    }
+
+    setIsLoadingExerciseOptions(true);
+    setExerciseOptionsError(null);
+
+    const result = await getReplaceExerciseOptionsAction();
+
+    if (result.status === 'success') {
+      setExerciseOptions({
+        muscleGroups: result.muscleGroups,
+        exercisesByMuscleGroup: result.exercisesByMuscleGroup,
+      });
+    } else {
+      setExerciseOptionsError(
+        result.message ?? 'Could not load exercises. Please try again.'
+      );
+    }
+
+    setIsLoadingExerciseOptions(false);
+  };
+
   return (
     <main className="bg-my-background flex flex-1 flex-col items-center">
       <div className="flex w-full items-center px-5 py-3.5">
@@ -113,6 +154,10 @@ export default function InstanceDay({
           <InstanceExerciseCard
             key={`${currentInstanceDayId}-${key}`}
             exercise={exercise}
+            exerciseOptions={exerciseOptions}
+            exerciseOptionsError={exerciseOptionsError}
+            isLoadingExerciseOptions={isLoadingExerciseOptions}
+            loadExerciseOptions={loadExerciseOptions}
             onAddExerciseBelow={handleAddExerciseBelow}
           />
         ))}

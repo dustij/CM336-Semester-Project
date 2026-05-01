@@ -101,7 +101,7 @@ export async function createMesocycleTemplate({
       const dayResult = (await query(insertTemplateDay, [
         templateId,
         day.dayOfWeek,
-        dayOrder,
+        dayOrder + 1,
       ])) as ResultSetHeader;
       const templateDayId = dayResult.insertId;
 

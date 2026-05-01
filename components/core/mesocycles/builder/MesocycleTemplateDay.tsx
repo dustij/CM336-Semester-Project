@@ -123,7 +123,7 @@ export default function MesocycleTemplateDay({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon-xl" aria-label="Day options">
-                  <EllipsisVertical className="size-5" />
+                  <EllipsisVertical className="text-body size-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-36">

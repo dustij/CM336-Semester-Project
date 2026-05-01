@@ -161,7 +161,7 @@ export default function MesocycleCard({
               className={buttonVariants({ variant: 'ghost', size: 'icon-xl' })}
               aria-label="Mesocycle options"
             >
-              <EllipsisVertical className="size-5" />
+              <EllipsisVertical className="text-body size-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-36">
               <DropdownMenuItem onClick={handleStartNewInstance}>

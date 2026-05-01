@@ -6,6 +6,7 @@ import {
   selectMesocycleListByUser,
   selectMesocycleTemplateById,
   setMesocycleTemplateAsDeleted,
+  setNewCurrentForUserId,
   updateMesocycleTemplateTitle,
 } from '@/db/sql/ts/mesocycle_template/query';
 import { insertPlannedExercise } from '@/db/sql/ts/planned_exercise/query';
@@ -52,24 +53,12 @@ export type RenameMesocycleTemplateInput = {
   newTitle: string;
 };
 
-export type RemoveMesocycleTemplateInput = {
-  userId: number;
-  templateId: number;
-};
-
 export type MesocycleTemplateDetail = {
   id: number;
   title: string;
   durationWeeks: number;
   days: MesocycleDayDraft[];
 };
-
-export async function getCurrentMesocycle(userId: number) {
-  'use cache';
-  cacheTag(`mesocycles:user:${userId}`);
-  cacheLife('max'); // max because we manually invalidate after user selects a mesocycle as current
-  return null;
-}
 
 export async function getMesocycleList(
   userId: number
@@ -204,8 +193,11 @@ export async function getMesocycleTemplate(
   }
 }
 
-export async function setMesocycleTemplateAsCurrent(templateId: number) {
-  void templateId;
+export async function setMesocycleTemplateAsCurrent(input: {
+  userId: number;
+  templateId: number;
+}) {
+  await db.query(setNewCurrentForUserId, [input.templateId, input.userId]);
 }
 
 export async function renameMesocycleTemplate(
@@ -218,19 +210,20 @@ export async function renameMesocycleTemplate(
   ])) as ResultSetHeader;
 
   if (result.affectedRows !== 1) {
-    throw new Error('Could not update name. Mesocycle template not found.');
+    throw new Error('Mesocycle template not found.');
   }
 }
 
-export async function removeMesocycleTemplate(
-  input: RemoveMesocycleTemplateInput
-) {
+export async function removeMesocycleTemplate(input: {
+  userId: number;
+  templateId: number;
+}) {
   const result = (await db.query(setMesocycleTemplateAsDeleted, [
     input.templateId,
     input.userId,
   ])) as ResultSetHeader;
 
   if (result.affectedRows !== 1) {
-    throw new Error('Could not set as deleted. Mesocycle template not found.');
+    throw new Error('Mesocycle template not found.');
   }
 }

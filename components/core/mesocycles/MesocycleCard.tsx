@@ -1,7 +1,17 @@
 'use client';
 
-import { removeMesocycleTemplateAction } from '@/app/(main)/mesocycles/actions';
+import {
+  removeMesocycleTemplateAction,
+  setNewCurrentAction,
+} from '@/app/(main)/mesocycles/actions';
 import { buttonVariants } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,18 +26,18 @@ import {
   Timer,
   Trash,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import RenameMesocycleDialog from './RenameMesocycleDialog';
 
 type MesocycleCardProps = {
-  id: number;
+  templateId: number;
   title: string;
   duration_weeks: number;
   days_per_week: number;
 };
 export default function MesocycleCard({
-  id,
+  templateId,
   title,
   duration_weeks,
   days_per_week,
@@ -37,6 +47,7 @@ export default function MesocycleCard({
   const [savedTitle, setSavedTitle] = useState(title);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
+  const [isSettingNewCurrent, setIsSettingNewCurrent] = useState(false);
 
   useEffect(() => {
     setTitleState(title);
@@ -46,25 +57,47 @@ export default function MesocycleCard({
   const handleRenameTemplate = () => {
     setIsRenameDialogOpen(true);
   };
+
   const handleOptimisticTitle = useCallback((newTitle: string) => {
     setTitleState(newTitle);
   }, []);
+
   const handleRenameSuccess = useCallback((newTitle: string) => {
     setTitleState(newTitle);
     setSavedTitle(newTitle);
   }, []);
+
   const handleRenameError = useCallback(() => {
     setTitleState(savedTitle);
   }, [savedTitle]);
-  const handleStartNewInstance = () => {};
-  const handleDuplicateTemplate = () => {
-    router.push(`/mesocycles/${id}/duplicate`);
+
+  const handleStartNewInstance = async () => {
+    setIsSettingNewCurrent(true);
+
+    try {
+      const result = await setNewCurrentAction(templateId);
+
+      if (result.status === 'success') {
+        setIsSettingNewCurrent(false);
+        window.setTimeout(() => router.push('/current'), 0);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to set new current template.', error);
+    }
+
+    setIsSettingNewCurrent(false);
   };
+
+  const handleDuplicateTemplate = () => {
+    router.push(`/mesocycles/${templateId}/duplicate`);
+  };
+
   const handleRemoveTemplate = () => {
     setIsRemoved(true);
 
     window.setTimeout(() => {
-      void removeMesocycleTemplateAction(id)
+      void removeMesocycleTemplateAction(templateId)
         .then((result) => {
           if (result.status !== 'success') {
             setIsRemoved(false);
@@ -76,8 +109,9 @@ export default function MesocycleCard({
         });
     }, 0);
   };
+
   const handleViewTemplate = () => {
-    router.push(`/mesocycles/${id}`);
+    router.push(`/mesocycles/${templateId}`);
   };
 
   if (isRemoved) {
@@ -89,7 +123,7 @@ export default function MesocycleCard({
       {isRenameDialogOpen && (
         <RenameMesocycleDialog
           open={isRenameDialogOpen}
-          templateId={id}
+          templateId={templateId}
           initialTitle={savedTitle}
           savedTitle={savedTitle}
           onOpenChange={setIsRenameDialogOpen}
@@ -98,6 +132,17 @@ export default function MesocycleCard({
           onRenameError={handleRenameError}
         />
       )}
+
+      <Dialog open={isSettingNewCurrent}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader className="text-body">
+            <DialogTitle>Preparing your mesocycle...</DialogTitle>
+            <DialogDescription className="sr-only">
+              Preparing your mesocycle.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex items-center justify-between rounded-[8px] bg-white px-4 py-2.5 shadow">
         {/* Title and Description */}

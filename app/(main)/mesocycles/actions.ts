@@ -3,6 +3,7 @@
 import {
   removeMesocycleTemplate,
   renameMesocycleTemplate,
+  setMesocycleTemplateAsCurrent,
 } from '@/db/repository/mesocycle_repository';
 import { verifySession } from '@/lib/session';
 import { updateTag } from 'next/cache';
@@ -13,7 +14,7 @@ export type RenameMesocycleTemplateActionState = {
   title?: string;
 };
 
-export type RemoveMesocycleTemplateActionState = {
+export type GeneralMesocycleTemplateActionState = {
   status?: 'success' | 'error';
   message?: string;
 };
@@ -69,7 +70,7 @@ export async function renameMesocycleTemplateAction(
 
 export async function removeMesocycleTemplateAction(
   templateId: number
-): Promise<RemoveMesocycleTemplateActionState> {
+): Promise<GeneralMesocycleTemplateActionState> {
   const { userId } = await verifySession();
 
   if (!Number.isInteger(templateId) || templateId <= 0) {
@@ -97,4 +98,31 @@ export async function removeMesocycleTemplateAction(
   return {
     status: 'success',
   };
+}
+
+export async function setNewCurrentAction(
+  templateId: number
+): Promise<GeneralMesocycleTemplateActionState> {
+  const { userId } = await verifySession();
+
+  if (!Number.isInteger(templateId) || templateId <= 0) {
+    return {
+      status: 'error',
+      message: 'Could not find the mesocycle template.',
+    };
+  }
+
+  try {
+    await setMesocycleTemplateAsCurrent({ userId, templateId });
+  } catch (error) {
+    console.error('Failed to create instance and set as current.', error);
+    return {
+      status: 'error',
+      message: 'Could not create instance and set as current.',
+    };
+  }
+
+  updateTag(`mesocycles:user:${userId}`);
+
+  return { status: 'success' };
 }

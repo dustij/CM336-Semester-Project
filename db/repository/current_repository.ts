@@ -210,6 +210,106 @@ export type CurrentMesocycleInstanceDetails = {
   days: CurrentInstanceDay[];
 };
 
+export type LogSetForPlannedExerciseInput = {
+  userId: number;
+  currentInstanceDayId: number;
+  plannedExerciseId: number;
+  set: {
+    setOrder: number;
+    weight: number;
+    reps: number;
+    completed: boolean;
+  };
+};
+
+export type SkipPlannedExerciseInput = {
+  userId: number;
+  currentInstanceDayId: number;
+  plannedExerciseId: number;
+};
+
+export type ReplacePlannedExerciseInput = {
+  userId: number;
+  currentInstanceDayId: number;
+  plannedExerciseId: number;
+  replacementExerciseId: number;
+  replaceOnTemplate: boolean;
+};
+
+export type AddExerciseToCurrentDayInput = {
+  userId: number;
+  currentInstanceDayId: number;
+  exerciseId: number;
+  exerciseOrder: number;
+};
+
+export type DeletePerformedExerciseInput = {
+  userId: number;
+  currentInstanceDayId: number;
+  performedExerciseId: number;
+};
+
+export type CompleteCurrentInstanceDayInput = {
+  userId: number;
+  currentInstanceDayId: number;
+  status: 'COMPLETED' | 'ABANDONED';
+};
+
+//
+// Current Instance Day Object:
+//
+// {
+//   "id": 4,
+//   "templateDayId": 1,
+//   "weekNumber": 1,
+//   "dayOfWeek": "Monday",
+//   "dayOrder": 0,
+//   "status": "PLANNED",
+//   "endDate": null,
+//   "templateTitle": "MT Template",
+//   "exercises": [
+//     {
+//       "source": "TEMPLATE",
+//       "plannedExerciseId": 1,
+//       "exerciseId": 6,
+//       "name": "Alternate Lateral Pulldown",
+//       "equipment": "Cable",
+//       "muscleGroup": "Back",
+//       "exerciseOrder": 0,
+//       "performedExerciseId": null,
+//       "performedExerciseStatus": null,
+//       "performedSets": [],
+//       "templateExercise": {
+//         "id": 6,
+//         "name": "Alternate Lateral Pulldown",
+//         "equipment": "Cable",
+//         "muscleGroup": "Back"
+//       },
+//       "performedExercise": null,
+//       "previousInstanceDayId": null,
+//       "previousPerformedExerciseId": null,
+//       "previousSets": [],
+//       "previousPerformance": null
+//     }
+//   ],
+//   "addedExercises": []
+// }
+
+export type CurrentInstanceRepository = {
+  getCurrentMesocycleInstanceDetails(
+    userId: number
+  ): Promise<CurrentMesocycleInstanceDetails | null>;
+  getCurrentInstanceDay(userId: number): Promise<CurrentInstanceDay | null>;
+  logSetForPlannedExercise(input: LogSetForPlannedExerciseInput): Promise<void>;
+  skipPlannedExercise(input: SkipPlannedExerciseInput): Promise<void>;
+  replacePlannedExercise(input: ReplacePlannedExerciseInput): Promise<void>;
+  addExerciseToCurrentDay(input: AddExerciseToCurrentDayInput): Promise<void>;
+  deletePerformedExercise(input: DeletePerformedExerciseInput): Promise<void>;
+  completeCurrentInstanceDay(
+    input: CompleteCurrentInstanceDayInput
+  ): Promise<void>;
+};
+
 export async function getCurrentMesocycleInstanceDetails(
   userId: number
 ): Promise<CurrentMesocycleInstanceDetails | null> {
@@ -480,103 +580,3 @@ export async function getCurrentInstanceDay(
 
   return currentInstanceDay;
 }
-
-export type LogSetForPlannedExerciseInput = {
-  userId: number;
-  currentInstanceDayId: number;
-  plannedExerciseId: number;
-  set: {
-    setOrder: number;
-    weight: number;
-    reps: number;
-    completed: boolean;
-  };
-};
-
-export type SkipPlannedExerciseInput = {
-  userId: number;
-  currentInstanceDayId: number;
-  plannedExerciseId: number;
-};
-
-export type ReplacePlannedExerciseInput = {
-  userId: number;
-  currentInstanceDayId: number;
-  plannedExerciseId: number;
-  replacementExerciseId: number;
-  replaceOnTemplate: boolean;
-};
-
-export type AddExerciseToCurrentDayInput = {
-  userId: number;
-  currentInstanceDayId: number;
-  exerciseId: number;
-  exerciseOrder: number;
-};
-
-export type DeletePerformedExerciseInput = {
-  userId: number;
-  currentInstanceDayId: number;
-  performedExerciseId: number;
-};
-
-export type CompleteCurrentInstanceDayInput = {
-  userId: number;
-  currentInstanceDayId: number;
-  status: 'COMPLETED' | 'ABANDONED';
-};
-
-//
-// Current Instance Day Object:
-//
-// {
-//   "id": 4,
-//   "templateDayId": 1,
-//   "weekNumber": 1,
-//   "dayOfWeek": "Monday",
-//   "dayOrder": 0,
-//   "status": "PLANNED",
-//   "endDate": null,
-//   "templateTitle": "MT Template",
-//   "exercises": [
-//     {
-//       "source": "TEMPLATE",
-//       "plannedExerciseId": 1,
-//       "exerciseId": 6,
-//       "name": "Alternate Lateral Pulldown",
-//       "equipment": "Cable",
-//       "muscleGroup": "Back",
-//       "exerciseOrder": 0,
-//       "performedExerciseId": null,
-//       "performedExerciseStatus": null,
-//       "performedSets": [],
-//       "templateExercise": {
-//         "id": 6,
-//         "name": "Alternate Lateral Pulldown",
-//         "equipment": "Cable",
-//         "muscleGroup": "Back"
-//       },
-//       "performedExercise": null,
-//       "previousInstanceDayId": null,
-//       "previousPerformedExerciseId": null,
-//       "previousSets": [],
-//       "previousPerformance": null
-//     }
-//   ],
-//   "addedExercises": []
-// }
-
-export type CurrentInstanceRepository = {
-  getCurrentMesocycleInstanceDetails(
-    userId: number
-  ): Promise<CurrentMesocycleInstanceDetails | null>;
-  getCurrentInstanceDay(userId: number): Promise<CurrentInstanceDay | null>;
-  logSetForPlannedExercise(input: LogSetForPlannedExerciseInput): Promise<void>;
-  skipPlannedExercise(input: SkipPlannedExerciseInput): Promise<void>;
-  replacePlannedExercise(input: ReplacePlannedExerciseInput): Promise<void>;
-  addExerciseToCurrentDay(input: AddExerciseToCurrentDayInput): Promise<void>;
-  deletePerformedExercise(input: DeletePerformedExerciseInput): Promise<void>;
-  completeCurrentInstanceDay(
-    input: CompleteCurrentInstanceDayInput
-  ): Promise<void>;
-};

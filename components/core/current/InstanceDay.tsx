@@ -18,10 +18,13 @@ import type {
   Weekday,
 } from '@/lib/core/types';
 import { EllipsisVertical, SkipForward } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import InstanceExerciseCard from './InstanceExerciseCard';
 import {
+  areSubmissionDraftsEqual,
+  buildFinishCurrentInstanceDayPayload,
   createCurrentInstanceExerciseRows,
+  type CurrentInstanceExerciseSubmissionDraft,
   insertExerciseRowBelow,
 } from './state';
 
@@ -53,6 +56,9 @@ export default function InstanceDay({
   const [exerciseRows, setExerciseRows] = useState(() =>
     createCurrentInstanceExerciseRows(exercises, addedExercises)
   );
+  const [exerciseDrafts, setExerciseDrafts] = useState<
+    Record<string, CurrentInstanceExerciseSubmissionDraft>
+  >({});
   const [exerciseOptions, setExerciseOptions] =
     useState<ExerciseOptionsState | null>(null);
   const [isLoadingExerciseOptions, setIsLoadingExerciseOptions] =
@@ -84,6 +90,22 @@ export default function InstanceDay({
     );
   };
 
+  const handleExerciseSubmissionDraftChange = useCallback(
+    (exerciseKey: string, draft: CurrentInstanceExerciseSubmissionDraft) => {
+      setExerciseDrafts((currentDrafts) => {
+        if (areSubmissionDraftsEqual(currentDrafts[exerciseKey], draft)) {
+          return currentDrafts;
+        }
+
+        return {
+          ...currentDrafts,
+          [exerciseKey]: draft,
+        };
+      });
+    },
+    []
+  );
+
   const loadExerciseOptions = async () => {
     if (exerciseOptions || isLoadingExerciseOptions) {
       return;
@@ -108,9 +130,26 @@ export default function InstanceDay({
     setIsLoadingExerciseOptions(false);
   };
 
+  const handleSubmitFinishedDay = async () => {
+    const result = buildFinishCurrentInstanceDayPayload({
+      currentInstanceDayId,
+      exerciseRows,
+      exerciseDrafts,
+    });
+
+    if (result.status === 'error') {
+      console.error('Current instance day is not ready to submit.', {
+        errors: result.errors,
+      });
+      return;
+    }
+
+    console.log('Prepared current instance day payload.', result.payload);
+  };
+
   return (
-    <main className="bg-my-background flex flex-1 flex-col items-center">
-      <div className="flex w-full items-center px-5 py-3.5">
+    <main className="bg-my-background flex min-h-0 flex-1 flex-col items-center overflow-hidden">
+      <div className="flex w-full shrink-0 items-center px-5 py-3.5">
         <div className="flex-1">
           <div>
             <p className="text-caption text-sm leading-tight">{title}</p>
@@ -139,10 +178,11 @@ export default function InstanceDay({
           </DropdownMenu>
         </div>
       </div>
-      <div className="flex w-full flex-1 flex-col gap-4 overflow-hidden overflow-y-auto px-5">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden overflow-y-auto px-5">
         {exerciseRows.map(({ exercise, key }) => (
           <InstanceExerciseCard
             key={`${currentInstanceDayId}-${key}`}
+            exerciseKey={key}
             exercise={exercise}
             exerciseOptions={exerciseOptions}
             exerciseOptionsError={exerciseOptionsError}
@@ -151,10 +191,15 @@ export default function InstanceDay({
             onAddExerciseBelow={(addedExercise) =>
               handleAddExerciseBelow(key, addedExercise)
             }
+            onSubmissionDraftChange={handleExerciseSubmissionDraftChange}
           />
         ))}
         <div className="mt-1 mb-5">
-          <Button className="h-12 w-full text-base font-semibold" size="lg">
+          <Button
+            className="h-12 w-full text-base font-semibold"
+            size="lg"
+            onClick={handleSubmitFinishedDay}
+          >
             Finish
           </Button>
         </div>

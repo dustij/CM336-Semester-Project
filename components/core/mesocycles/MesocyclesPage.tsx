@@ -7,8 +7,8 @@ import MesocycleCard from './MesocycleCard';
 export default async function MesocyclesPage({ userId }: { userId: number }) {
   const mesocycleList = await getMesocycleList(userId);
   return (
-    <main className="bg-my-background flex flex-1 flex-col items-center justify-center">
-      <div className="flex w-full items-center px-5 py-3.5">
+    <main className="bg-my-background flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden">
+      <div className="flex w-full shrink-0 items-center px-5 py-3.5">
         <div className="flex-1">
           <p className="text-body text-lg font-semibold">Mesocycles</p>
         </div>
@@ -19,7 +19,7 @@ export default async function MesocyclesPage({ userId }: { userId: number }) {
           </Button>
         </Link>
       </div>
-      <div className="w-full flex-1 overflow-hidden overflow-y-auto px-5">
+      <div className="min-h-0 w-full flex-1 overflow-hidden overflow-y-auto px-5">
         {!mesocycleList || mesocycleList.length === 0 ? (
           // For smoke testing with Codex
           // <MesocycleCard

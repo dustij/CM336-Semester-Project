@@ -28,8 +28,9 @@ import {
   SkipForward,
   Trash,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReplaceExerciseDialog from './ReplaceExerciseDialog';
+import type { CurrentInstanceExerciseSubmissionDraft } from './state';
 
 type EditableSet = {
   localId: string;
@@ -41,12 +42,17 @@ type EditableSet = {
 };
 
 type InstanceExerciseCardProps = {
+  exerciseKey: string;
   exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise;
   exerciseOptions: ExerciseOptionsState | null;
   exerciseOptionsError: string | null;
   isLoadingExerciseOptions: boolean;
   loadExerciseOptions: () => Promise<void>;
   onAddExerciseBelow: (exercise: ExerciseCatalogListItem) => void;
+  onSubmissionDraftChange: (
+    exerciseKey: string,
+    draft: CurrentInstanceExerciseSubmissionDraft
+  ) => void;
 };
 
 type ExerciseOptionsState = {
@@ -58,21 +64,28 @@ const setGridClass =
   'grid grid-cols-[28px_minmax(0,1fr)_minmax(0,1fr)_52px] items-center gap-x-4';
 
 export default function InstanceExerciseCard({
+  exerciseKey,
   exercise,
   exerciseOptions,
   exerciseOptionsError,
   isLoadingExerciseOptions,
   loadExerciseOptions,
   onAddExerciseBelow,
+  onSubmissionDraftChange,
 }: InstanceExerciseCardProps) {
   const exerciseIdentity = getExerciseIdentity(exercise);
   const originalDisplayExercise = getDisplayExercise(exercise);
   const [replacementExercise, setReplacementExercise] =
     useState<ExerciseCatalogListItem | null>(null);
-  const [, setReplacementRepeatsUntilMesocycleEnd] = useState(false);
+  const [
+    replacementRepeatsUntilMesocycleEnd,
+    setReplacementRepeatsUntilMesocycleEnd,
+  ] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isReplaceDialogOpen, setIsReplaceDialogOpen] = useState(false);
-  const [isExerciseHidden, setIsExerciseHidden] = useState(false);
+  const [exerciseDisposition, setExerciseDisposition] = useState<
+    CurrentInstanceExerciseSubmissionDraft['disposition']
+  >('active');
   const [sets, setSets] = useState<EditableSet[]>(() =>
     buildInitialSets(exercise, exerciseIdentity)
   );
@@ -151,7 +164,29 @@ export default function InstanceExerciseCard({
     );
   };
 
-  if (isExerciseHidden) {
+  useEffect(() => {
+    onSubmissionDraftChange(exerciseKey, {
+      disposition: exerciseDisposition,
+      replacementExercise,
+      replacementRepeatsUntilMesocycleEnd,
+      sets: sets.map((set) => ({
+        setOrder: set.setOrder,
+        weight: set.weight,
+        reps: set.reps,
+        completed: set.completed,
+        status: set.status,
+      })),
+    });
+  }, [
+    exerciseDisposition,
+    exerciseKey,
+    onSubmissionDraftChange,
+    replacementExercise,
+    replacementRepeatsUntilMesocycleEnd,
+    sets,
+  ]);
+
+  if (exerciseDisposition !== 'active') {
     return null;
   }
 
@@ -209,7 +244,7 @@ export default function InstanceExerciseCard({
               </DropdownMenuItem>
               <DropdownMenuItem
                 className=""
-                onClick={() => setIsExerciseHidden(true)}
+                onClick={() => setExerciseDisposition('skipped')}
               >
                 <SkipForward className="mr-2 size-4" />
                 Skip exercise
@@ -217,7 +252,7 @@ export default function InstanceExerciseCard({
               <DropdownMenuItem
                 variant="destructive"
                 className=""
-                onClick={() => setIsExerciseHidden(true)}
+                onClick={() => setExerciseDisposition('deleted')}
               >
                 <Trash className="mr-2 size-4" />
                 Delete exercise
@@ -324,27 +359,21 @@ export default function InstanceExerciseCard({
                 className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
 
-              <label className="flex justify-center">
-                <span className="sr-only">Log set {set.setOrder}</span>
-                <input
-                  checked={set.completed}
-                  className="sr-only"
-                  type="checkbox"
-                  onChange={(event) =>
-                    handleSetChange(set.localId, {
-                      completed: event.target.checked,
-                    })
-                  }
-                />
-                <span
-                  className={cn(
-                    'border-border flex size-9 items-center justify-center rounded-[12px] border bg-white transition-colors',
-                    set.completed && 'border-my-primary bg-my-primary'
-                  )}
-                >
-                  {set.completed && <Check className="size-5 text-white" />}
-                </span>
-              </label>
+              <button
+                aria-checked={set.completed}
+                aria-label={`Log set ${set.setOrder}`}
+                className={cn(
+                  'border-border flex size-9 items-center justify-center justify-self-center rounded-[12px] border bg-white transition-colors outline-none touch-manipulation focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+                  set.completed && 'border-my-primary bg-my-primary'
+                )}
+                role="checkbox"
+                type="button"
+                onClick={() =>
+                  handleSetChange(set.localId, { completed: !set.completed })
+                }
+              >
+                {set.completed && <Check className="size-5 text-white" />}
+              </button>
             </div>
           ))}
         </div>

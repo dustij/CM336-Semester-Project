@@ -114,7 +114,7 @@ CREATE TABLE instance_day (
   status ENUM(
     'PLANNED',
     'COMPLETED',
-    'ABANDONED'
+    'SKIPPED'
   ) NOT NULL DEFAULT 'PLANNED',
   CONSTRAINT fk_instance_day_template_day FOREIGN KEY (template_day_id) REFERENCES template_day(template_day_id) 
     ON DELETE SET NULL,
@@ -301,10 +301,8 @@ END $
 DELIMITER ;
 
 
-SHOW TABLES;
-
 -- // TODO: create trigger in create.sql
--- // When the current instance_day is updated to either COMPLETED or ABANDONED, the
+-- // When the current instance_day is updated to either COMPLETED or SKIPPED, the
 -- // database should create the next instance_day for the same mesocycle_instance.
 -- // The next day is determined from the template_day ordering:
 

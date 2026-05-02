@@ -204,17 +204,11 @@ export default function InstanceExerciseCard({
               <DropdownMenuLabel className="bg-muted -mx-1 -mt-1 mb-1 rounded-t-lg px-3 py-2">
                 Exercise
               </DropdownMenuLabel>
-              <DropdownMenuItem
-                className=""
-                onClick={handleOpenReplaceDialog}
-              >
+              <DropdownMenuItem className="" onClick={handleOpenReplaceDialog}>
                 <ArrowLeftRight className="mr-2 size-4" />
                 Change exercise
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className=""
-                onClick={handleOpenAddDialog}
-              >
+              <DropdownMenuItem className="" onClick={handleOpenAddDialog}>
                 <CirclePlus className="mr-2 size-4" />
                 Add exercise below
               </DropdownMenuItem>
@@ -321,7 +315,7 @@ export default function InstanceExerciseCard({
                 onChange={(event) =>
                   handleSetChange(set.localId, { weight: event.target.value })
                 }
-                className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center text-xl font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
 
               <Input
@@ -332,7 +326,7 @@ export default function InstanceExerciseCard({
                 onChange={(event) =>
                   handleSetChange(set.localId, { reps: event.target.value })
                 }
-                className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center text-xl font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="text-body h-9 [appearance:textfield] rounded-[12px] bg-white text-center font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
 
               <label className="flex justify-center">

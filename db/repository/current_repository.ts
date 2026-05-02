@@ -24,7 +24,7 @@ Each instance_day represents one scheduled workout day from the template for a
 specific week. For example, a 3-week template with 3 days per week can produce 
 up to 9 instance_day rows by the time the cycle is finished.
 
-When the current instance_day is updated to either COMPLETED or ABANDONED, the 
+When the current instance_day is updated to either COMPLETED or SKIPPED, the 
 database should create the next instance_day for the same mesocycle_instance. 
 The next day is determined from the template_day ordering:
 
@@ -41,16 +41,25 @@ instance_day is created and the mesocycle_instance can be considered complete.
 The instance_day status controls progression:
 - PLANNED: scheduled/current day
 - COMPLETED: user finished the day
-- ABANDONED: user skipped/ended the day, but progression should still continue
+- SKIPPED: user skipped/ended the day, but progression should still continue
 
-Both COMPLETED and ABANDONED advance the mesocycle to the next scheduled 
+Both COMPLETED and SKIPPED advance the mesocycle to the next scheduled 
 template day. Other statuses should not trigger creation of the next 
 instance_day.
 
+---
+
+Only save/update the database when the user clicks finish for the instance_day.
+The interface function is completeCurrentInstanceDay.
+
+TODO: We need to update the CompleteCurrentInstanceDayInput for this function,
+it should take all relevant information such as performed_sets, replaced/skipped/
+added exercises. We should write a store procedure we can call that wraps a 
+transaction and can orchestrate all the necessary steps.
 
  */
 
-type InstanceDayStatus = 'PLANNED' | 'COMPLETED' | 'ABANDONED';
+type InstanceDayStatus = 'PLANNED' | 'COMPLETED' | 'SKIPPED';
 export type PerformedExerciseStatus =
   | 'COMPLETED'
   | 'REPLACED'
@@ -252,7 +261,7 @@ export type DeletePerformedExerciseInput = {
 export type CompleteCurrentInstanceDayInput = {
   userId: number;
   currentInstanceDayId: number;
-  status: 'COMPLETED' | 'ABANDONED';
+  status: 'COMPLETED' | 'SKIPPED';
 };
 
 //

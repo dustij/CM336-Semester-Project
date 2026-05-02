@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { getCurrentInstanceDay } from '@/db/repository/current_mock_repository';
+import { getCurrentInstanceDay } from '@/db/repository/current_repository';
 import Link from 'next/link';
 import InstanceDay from './InstanceDay';
 

@@ -158,17 +158,7 @@ ORDER BY
   pset.set_order ASC
 `;
 
-// TODO: create trigger in create.sql
-// When the current instance_day is updated to either COMPLETED or SKIPPED, the
-// database should create the next instance_day for the same mesocycle_instance.
-// The next day is determined from the template_day ordering:
-
-// - If there is another template_day later in the same week, create an
-// instance_day for that template_day with the same week_number.
-
-// - If the current day is the last template_day of the week and the mesocycle has
-// more weeks remaining, create an instance_day for the first template_day with
-// week_number + 1.
-
-// - If the current day is the last template_day of the final week, no new
-// instance_day is created and the mesocycle_instance can be considered complete.
+// Instance-day progression is handled by complete_current_instance_day in create.sql.
+export const completeCurrentInstanceDay = `
+CALL complete_current_instance_day(?, ?, ?)
+`;

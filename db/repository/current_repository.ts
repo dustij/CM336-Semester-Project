@@ -5,6 +5,7 @@ import type { Weekday } from '@/lib/core/types';
 import type { RowDataPacket } from 'mysql2';
 import { cacheLife, cacheTag } from 'next/cache';
 import {
+  completeCurrentInstanceDay as completeCurrentInstanceDayQuery,
   selectCurrentAddedPerformedExercisesByUserId,
   selectCurrentInstanceByUserId,
 } from '../sql/ts/mesocycle_instance/query';
@@ -588,4 +589,14 @@ export async function getCurrentInstanceDay(
   // console.log(JSON.stringify(currentInstanceDay, null, 2));
 
   return currentInstanceDay;
+}
+
+export async function completeCurrentInstanceDay(
+  input: CompleteCurrentInstanceDayInput
+): Promise<void> {
+  await db.query(completeCurrentInstanceDayQuery, [
+    input.userId,
+    input.currentInstanceDayId,
+    input.status,
+  ]);
 }

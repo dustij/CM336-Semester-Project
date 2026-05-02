@@ -301,17 +301,128 @@ END $
 DELIMITER ;
 
 
--- // TODO: create trigger in create.sql
--- // When the current instance_day is updated to either COMPLETED or SKIPPED, the
--- // database should create the next instance_day for the same mesocycle_instance.
--- // The next day is determined from the template_day ordering:
+-- MySQL/MariaDB does not allow an instance_day trigger to insert the next row
+-- into instance_day, so this procedure handles the status update, end_date, and
+-- next-day creation in one transaction.
+DELIMITER $
+CREATE PROCEDURE complete_current_instance_day(
+  IN p_user_id INT,
+  IN p_instance_day_id INT,
+  IN p_status VARCHAR(20)
+)
+BEGIN
+  DECLARE var_instance_id INT DEFAULT NULL;
+  DECLARE var_template_id INT DEFAULT NULL;
+  DECLARE var_template_day_id INT DEFAULT NULL;
+  DECLARE var_next_template_day_id INT DEFAULT NULL;
+  DECLARE var_week_number TINYINT DEFAULT NULL;
+  DECLARE var_day_order TINYINT DEFAULT NULL;
+  DECLARE var_duration_weeks TINYINT DEFAULT NULL;
+  DECLARE var_status VARCHAR(20) DEFAULT NULL;
 
--- // - If there is another template_day later in the same week, create an
--- // instance_day for that template_day with the same week_number.
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    RESIGNAL;
+  END;
 
--- // - If the current day is the last template_day of the week and the mesocycle has
--- // more weeks remaining, create an instance_day for the first template_day with
--- // week_number + 1.
+  IF p_status IS NULL OR p_status NOT IN ('COMPLETED', 'SKIPPED') THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Instance day status must be COMPLETED or SKIPPED.';
+  END IF;
 
--- // - If the current day is the last template_day of the final week, no new
--- // instance_day is created and the mesocycle_instance can be considered complete.
+  START TRANSACTION;
+
+  SELECT
+    iday.instance_id,
+    iday.template_day_id,
+    iday.week_number,
+    iday.status,
+    tday.template_id,
+    tday.day_order,
+    mt.duration_weeks
+  INTO
+    var_instance_id,
+    var_template_day_id,
+    var_week_number,
+    var_status,
+    var_template_id,
+    var_day_order,
+    var_duration_weeks
+  FROM instance_day AS iday
+  JOIN mesocycle_instance AS mi
+    ON mi.instance_id = iday.instance_id
+  JOIN template_day AS tday
+    ON tday.template_day_id = iday.template_day_id
+  JOIN mesocycle_template AS mt
+    ON mt.template_id = tday.template_id
+  WHERE iday.instance_day_id = p_instance_day_id
+    AND mi.user_id = p_user_id
+    AND mi.is_current = TRUE
+  LIMIT 1
+  FOR UPDATE;
+
+  IF var_instance_id IS NULL THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Current instance day not found for user.';
+  END IF;
+
+  IF var_status <> 'PLANNED' THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Current instance day is not planned.';
+  END IF;
+
+  UPDATE instance_day
+  SET
+    status = p_status,
+    end_date = COALESCE(end_date, CURRENT_DATE())
+  WHERE instance_day_id = p_instance_day_id;
+
+  SELECT template_day_id
+  INTO var_next_template_day_id
+  FROM template_day
+  WHERE template_id = var_template_id
+    AND day_order > var_day_order
+  ORDER BY day_order ASC
+  LIMIT 1;
+
+  IF var_next_template_day_id IS NOT NULL THEN
+    INSERT IGNORE INTO instance_day (
+      template_day_id,
+      instance_id,
+      week_number
+    ) VALUES (
+      var_next_template_day_id,
+      var_instance_id,
+      var_week_number
+    );
+  ELSEIF var_week_number < var_duration_weeks THEN
+    SELECT template_day_id
+    INTO var_next_template_day_id
+    FROM template_day
+    WHERE template_id = var_template_id
+    ORDER BY day_order ASC
+    LIMIT 1;
+
+    INSERT IGNORE INTO instance_day (
+      template_day_id,
+      instance_id,
+      week_number
+    ) VALUES (
+      var_next_template_day_id,
+      var_instance_id,
+      var_week_number + 1
+    );
+  ELSE
+    UPDATE mesocycle_instance
+    SET
+      end_date = CURRENT_DATE(),
+      is_current = FALSE
+    WHERE instance_id = var_instance_id;
+  END IF;
+
+  COMMIT;
+END $
+DELIMITER ;

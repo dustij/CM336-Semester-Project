@@ -94,7 +94,7 @@ LEFT JOIN instance_day AS prev_iday
   ON prev_iday.instance_id = iday.instance_id
   AND prev_iday.template_day_id = iday.template_day_id
   AND prev_iday.week_number = iday.week_number - 1
-  AND prev_iday.status IN ('COMPLETED', 'ABANDONED')
+  AND prev_iday.status IN ('COMPLETED', 'SKIPPED')
 LEFT JOIN performed_exercise AS prev_perf
   ON prev_perf.instance_day_id = prev_iday.instance_day_id
   AND prev_perf.planned_exercise_id = pe.planned_exercise_id
@@ -159,7 +159,7 @@ ORDER BY
 `;
 
 // TODO: create trigger in create.sql
-// When the current instance_day is updated to either COMPLETED or ABANDONED, the
+// When the current instance_day is updated to either COMPLETED or SKIPPED, the
 // database should create the next instance_day for the same mesocycle_instance.
 // The next day is determined from the template_day ordering:
 

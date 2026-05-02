@@ -227,7 +227,7 @@ export const currentMockRepository: CurrentInstanceRepository = {
     day.status = input.status;
     day.endDate = new Date();
 
-    if (input.status === 'COMPLETED' || input.status === 'ABANDONED') {
+    if (input.status === 'COMPLETED' || input.status === 'SKIPPED') {
       appendNextInstanceDay(day);
     }
   },
@@ -395,7 +395,7 @@ function findPreviousDay(templateDayId: number, weekNumber: number) {
       (day) =>
         day.templateDayId === templateDayId &&
         day.weekNumber === weekNumber - 1 &&
-        (day.status === 'COMPLETED' || day.status === 'ABANDONED')
+        (day.status === 'COMPLETED' || day.status === 'SKIPPED')
     ) ?? null
   );
 }

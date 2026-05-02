@@ -261,7 +261,7 @@ export type DeletePerformedExerciseInput = {
 export type CompleteCurrentInstanceDayInput = {
   userId: number;
   currentInstanceDayId: number;
-  status: 'COMPLETED' | 'ABANDONED';
+  status: 'COMPLETED' | 'SKIPPED';
 };
 
 //

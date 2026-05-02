@@ -168,20 +168,8 @@ export const currentMockRepository: CurrentInstanceRepository = {
     const performedExercise = ensurePerformedExercise(exercise, 'REPLACED');
 
     performedExercise.exercise = replacement;
+    performedExercise.repeatUntilMesocycleEnd = input.replaceOnTemplate;
     syncPerformedExercise(exercise, performedExercise);
-
-    if (input.replaceOnTemplate) {
-      const templateExercise = templateExercises.find(
-        (item) => item.plannedExerciseId === input.plannedExerciseId
-      );
-
-      if (templateExercise == null) {
-        throw new Error('Planned exercise not found on template.');
-      }
-
-      templateExercise.exercise = replacement;
-      applyTemplateExercise(exercise, replacement);
-    }
   },
 
   async addExerciseToCurrentDay(input) {
@@ -193,6 +181,7 @@ export const currentMockRepository: CurrentInstanceRepository = {
       id: nextPerformedExerciseId++,
       plannedExerciseId: null,
       exerciseOrder: input.exerciseOrder,
+      repeatUntilMesocycleEnd: false,
       status: 'ADDED',
       exercise,
       sets: [],
@@ -223,6 +212,54 @@ export const currentMockRepository: CurrentInstanceRepository = {
   async completeCurrentInstanceDay(input) {
     assertUser(input.userId);
     const day = getMutableDay(input.currentInstanceDayId);
+
+    for (const exercise of day.exercises) {
+      exercise.performedExerciseId = null;
+      exercise.performedExerciseStatus = null;
+      exercise.performedExercise = null;
+      exercise.performedSets = [];
+    }
+
+    day.addedExercises = [];
+
+    for (const performedExerciseInput of [...input.performedExercises].sort(
+      (a, b) => a.exerciseOrder - b.exerciseOrder
+    )) {
+      const performedExercise: CurrentInstancePerformedExercise = {
+        id: nextPerformedExerciseId++,
+        plannedExerciseId: performedExerciseInput.plannedExerciseId,
+        exerciseOrder: performedExerciseInput.exerciseOrder,
+        repeatUntilMesocycleEnd:
+          performedExerciseInput.repeatUntilMesocycleEnd,
+        status: performedExerciseInput.status,
+        exercise: getExerciseSnapshot(performedExerciseInput.exerciseId),
+        sets: [...performedExerciseInput.performedSets]
+          .sort((a, b) => a.setOrder - b.setOrder)
+          .map((set) => ({
+            id: nextSetId++,
+            setOrder: set.setOrder,
+            weight: set.weight,
+            reps: set.reps,
+            completed: set.isCompleted,
+          })),
+      };
+
+      if (performedExerciseInput.plannedExerciseId == null) {
+        day.addedExercises.push(performedExercise);
+        continue;
+      }
+
+      const exercise = day.exercises.find(
+        (item) =>
+          item.plannedExerciseId === performedExerciseInput.plannedExerciseId
+      );
+
+      if (exercise == null) {
+        throw new Error('Planned exercise not found on current instance day.');
+      }
+
+      syncPerformedExercise(exercise, performedExercise);
+    }
 
     day.status = input.status;
     day.endDate = new Date();
@@ -338,6 +375,8 @@ function createCurrentInstanceExercise(
         instanceDayId: previousDay?.id ?? 0,
         performedExercise: {
           ...previousPerformedExercise,
+          repeatUntilMesocycleEnd:
+            previousPerformedExercise.repeatUntilMesocycleEnd,
           sets: clonePreviousSets(previousPerformedExercise.sets),
         },
       } satisfies CurrentInstancePreviousPerformance)
@@ -414,6 +453,7 @@ function ensurePerformedExercise(
     id: nextPerformedExerciseId++,
     plannedExerciseId: exercise.plannedExerciseId,
     exerciseOrder: exercise.exerciseOrder,
+    repeatUntilMesocycleEnd: false,
     status,
     exercise: cloneExerciseSnapshot(exercise.templateExercise),
     sets: [],
@@ -431,17 +471,6 @@ function syncPerformedExercise(
   exercise.performedExerciseId = performedExercise.id;
   exercise.performedExerciseStatus = performedExercise.status;
   exercise.performedSets = performedExercise.sets;
-}
-
-function applyTemplateExercise(
-  exercise: CurrentInstanceExercise,
-  snapshot: CurrentInstanceExerciseSnapshot
-) {
-  exercise.exerciseId = snapshot.id;
-  exercise.name = snapshot.name;
-  exercise.equipment = snapshot.equipment;
-  exercise.muscleGroup = snapshot.muscleGroup;
-  exercise.templateExercise = cloneExerciseSnapshot(snapshot);
 }
 
 function getPlannedExerciseForInput(

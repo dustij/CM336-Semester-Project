@@ -41,6 +41,7 @@ SELECT
   current_perf.performed_exercise_id AS current_performed_exercise_id,
   current_perf.exercise_id AS current_performed_exercise_exercise_id,
   current_perf.exercise_order AS current_performed_exercise_order,
+  current_perf.repeat_until_mesocycle_end AS current_performed_exercise_repeat_until_mesocycle_end,
   current_perf.status AS current_performed_exercise_status,
   current_e.name AS current_performed_exercise_name,
   current_eq.name AS current_performed_exercise_equipment,
@@ -55,6 +56,7 @@ SELECT
   prev_perf.performed_exercise_id AS previous_performed_exercise_id,
   prev_perf.exercise_id AS previous_performed_exercise_exercise_id,
   prev_perf.exercise_order AS previous_performed_exercise_order,
+  prev_perf.repeat_until_mesocycle_end AS previous_performed_exercise_repeat_until_mesocycle_end,
   prev_perf.status AS previous_performed_exercise_status,
   prev_e.name AS previous_performed_exercise_name,
   prev_eq.name AS previous_performed_exercise_equipment,
@@ -129,6 +131,7 @@ SELECT
   perf.performed_exercise_id,
   perf.exercise_id,
   perf.exercise_order,
+  perf.repeat_until_mesocycle_end,
   perf.status,
   e.name AS exercise_name,
   eq.name AS equipment,
@@ -160,5 +163,5 @@ ORDER BY
 
 // Instance-day progression is handled by complete_current_instance_day in create.sql.
 export const completeCurrentInstanceDay = `
-CALL complete_current_instance_day(?, ?, ?)
+CALL complete_current_instance_day(?, ?, ?, ?)
 `;

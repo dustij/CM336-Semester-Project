@@ -423,10 +423,28 @@ function getDisplayExercise(
   exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise
 ) {
   if (isTemplateExercise(exercise)) {
-    return exercise.performedExercise?.exercise ?? exercise.templateExercise;
+    return (
+      exercise.performedExercise?.exercise ??
+      getPreviousRepeatedReplacement(exercise)?.exercise ??
+      exercise.templateExercise
+    );
   }
 
   return exercise.exercise;
+}
+
+function getPreviousRepeatedReplacement(exercise: CurrentInstanceExercise) {
+  const previousPerformedExercise =
+    exercise.previousPerformance?.performedExercise;
+
+  if (
+    previousPerformedExercise?.status === 'REPLACED' &&
+    previousPerformedExercise.repeatUntilMesocycleEnd
+  ) {
+    return previousPerformedExercise;
+  }
+
+  return null;
 }
 
 function getExerciseIdentity(

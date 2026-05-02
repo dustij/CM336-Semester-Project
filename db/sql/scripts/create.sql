@@ -131,6 +131,7 @@ CREATE TABLE performed_exercise (
   exercise_id INT NOT NULL,
   instance_day_id INT NOT NULL,
   exercise_order TINYINT NOT NULL,
+  repeat_until_mesocycle_end BOOLEAN NOT NULL DEFAULT FALSE,
   status ENUM(
     'COMPLETED',
     'REPLACED',
@@ -161,6 +162,8 @@ CREATE TABLE performed_set (
   CONSTRAINT uq_performed_set_order UNIQUE (performed_exercise_id, set_order)
 );
 
+
+-- Get number of days per week in a template
 DELIMITER $
 CREATE FUNCTION getDaysPerWeekInTemplate
 (
@@ -210,6 +213,7 @@ LEFT JOIN muscle_group AS mg
 WHERE mt.is_deleted = FALSE;
 
 
+-- Procedure: Set a new current instance for user
 DELIMITER $
 CREATE PROCEDURE set_new_current_for_user(
   IN p_template_id INT,
@@ -300,15 +304,16 @@ BEGIN
 END $
 DELIMITER ;
 
-
--- MySQL/MariaDB does not allow an instance_day trigger to insert the next row
+-- Procedure: Orchestrate comleting instance day
+-- * MySQL/MariaDB does not allow an instance_day trigger to insert the next row
 -- into instance_day, so this procedure handles the status update, end_date, and
 -- next-day creation in one transaction.
 DELIMITER $
 CREATE PROCEDURE complete_current_instance_day(
   IN p_user_id INT,
   IN p_instance_day_id INT,
-  IN p_status VARCHAR(20)
+  IN p_status VARCHAR(20),
+  IN p_performed_exercises_json JSON
 )
 BEGIN
   DECLARE var_instance_id INT DEFAULT NULL;
@@ -331,7 +336,35 @@ BEGIN
       SET MESSAGE_TEXT = 'Instance day status must be COMPLETED or SKIPPED.';
   END IF;
 
+  IF p_performed_exercises_json IS NULL
+    OR JSON_VALID(p_performed_exercises_json) = 0
+    OR JSON_TYPE(p_performed_exercises_json) <> 'ARRAY' THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed exercises payload must be a JSON array.';
+  END IF;
+
   START TRANSACTION;
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_exercise;
+  DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_set;
+
+  CREATE TEMPORARY TABLE tmp_current_day_performed_exercise (
+    tmp_performed_exercise_id INT AUTO_INCREMENT PRIMARY KEY,
+    planned_exercise_id INT NULL,
+    exercise_id INT NOT NULL,
+    exercise_order INT NOT NULL,
+    repeat_until_mesocycle_end BOOLEAN NOT NULL,
+    status VARCHAR(20) NOT NULL
+  );
+
+  CREATE TEMPORARY TABLE tmp_current_day_performed_set (
+    tmp_performed_set_id INT AUTO_INCREMENT PRIMARY KEY,
+    exercise_order INT NOT NULL,
+    set_order INT NOT NULL,
+    weight INT NOT NULL,
+    reps INT NOT NULL,
+    is_completed BOOLEAN NOT NULL
+  );
 
   SELECT
     iday.instance_id,
@@ -373,6 +406,192 @@ BEGIN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Current instance day is not planned.';
   END IF;
+
+  INSERT INTO tmp_current_day_performed_exercise (
+    planned_exercise_id,
+    exercise_id,
+    exercise_order,
+    repeat_until_mesocycle_end,
+    status
+  )
+  SELECT
+    payload.planned_exercise_id,
+    payload.exercise_id,
+    payload.exercise_order,
+    COALESCE(payload.repeat_until_mesocycle_end, FALSE),
+    payload.status
+  FROM JSON_TABLE(
+    p_performed_exercises_json,
+    '$[*]' COLUMNS (
+      planned_exercise_id INT PATH '$.plannedExerciseId' NULL ON EMPTY,
+      exercise_id INT PATH '$.exerciseId',
+      exercise_order INT PATH '$.exerciseOrder',
+      repeat_until_mesocycle_end BOOLEAN PATH '$.repeatUntilMesocycleEnd' NULL ON EMPTY,
+      status VARCHAR(20) PATH '$.status'
+    )
+  ) AS payload;
+
+  INSERT INTO tmp_current_day_performed_set (
+    exercise_order,
+    set_order,
+    weight,
+    reps,
+    is_completed
+  )
+  SELECT
+    payload.exercise_order,
+    payload.set_order,
+    payload.weight,
+    payload.reps,
+    payload.is_completed
+  FROM JSON_TABLE(
+    p_performed_exercises_json,
+    '$[*]' COLUMNS (
+      exercise_order INT PATH '$.exerciseOrder',
+      NESTED PATH '$.performedSets[*]' COLUMNS (
+        set_order INT PATH '$.setOrder',
+        weight INT PATH '$.weight',
+        reps INT PATH '$.reps',
+        is_completed BOOLEAN PATH '$.isCompleted'
+      )
+    )
+  ) AS payload
+  WHERE payload.set_order IS NOT NULL;
+
+  IF EXISTS (
+    SELECT 1
+    FROM tmp_current_day_performed_exercise
+    WHERE exercise_id IS NULL
+      OR exercise_order IS NULL
+      OR exercise_order < 0
+      OR status IS NULL
+      OR status NOT IN ('COMPLETED', 'REPLACED', 'SKIPPED', 'ADDED')
+      OR (repeat_until_mesocycle_end = TRUE AND status <> 'REPLACED')
+      OR (repeat_until_mesocycle_end = TRUE AND planned_exercise_id IS NULL)
+  ) THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed exercise payload contains invalid exercise data.';
+  END IF;
+
+  IF EXISTS (
+    SELECT exercise_order
+    FROM tmp_current_day_performed_exercise
+    GROUP BY exercise_order
+    HAVING COUNT(*) > 1
+  ) THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed exercise payload contains duplicate exercise orders.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM tmp_current_day_performed_exercise AS perf
+    LEFT JOIN exercise AS e
+      ON e.exercise_id = perf.exercise_id
+    WHERE e.exercise_id IS NULL
+  ) THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed exercise payload references an unknown exercise.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM tmp_current_day_performed_exercise AS perf
+    LEFT JOIN planned_exercise AS pe
+      ON pe.planned_exercise_id = perf.planned_exercise_id
+      AND pe.template_day_id = var_template_day_id
+    WHERE perf.planned_exercise_id IS NOT NULL
+      AND pe.planned_exercise_id IS NULL
+  ) THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed exercise payload references an invalid planned exercise.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM tmp_current_day_performed_set
+    WHERE set_order IS NULL
+      OR set_order < 0
+      OR weight IS NULL
+      OR weight < 0
+      OR reps IS NULL
+      OR reps < 0
+  ) THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed set payload contains invalid set data.';
+  END IF;
+
+  IF EXISTS (
+    SELECT
+      exercise_order,
+      set_order
+    FROM tmp_current_day_performed_set
+    GROUP BY exercise_order, set_order
+    HAVING COUNT(*) > 1
+  ) THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed set payload contains duplicate set orders.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM tmp_current_day_performed_set AS pset
+    LEFT JOIN tmp_current_day_performed_exercise AS perf
+      ON perf.exercise_order = pset.exercise_order
+    WHERE perf.exercise_order IS NULL
+  ) THEN
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Performed set payload references an unknown performed exercise.';
+  END IF;
+
+  DELETE FROM performed_exercise
+  WHERE instance_day_id = p_instance_day_id;
+
+  INSERT INTO performed_exercise (
+    planned_exercise_id,
+    exercise_id,
+    instance_day_id,
+    exercise_order,
+    repeat_until_mesocycle_end,
+    status
+  )
+  SELECT
+    planned_exercise_id,
+    exercise_id,
+    p_instance_day_id,
+    exercise_order,
+    repeat_until_mesocycle_end,
+    status
+  FROM tmp_current_day_performed_exercise
+  ORDER BY exercise_order ASC;
+
+  INSERT INTO performed_set (
+    performed_exercise_id,
+    set_order,
+    weight,
+    reps,
+    is_completed
+  )
+  SELECT
+    perf.performed_exercise_id,
+    pset.set_order,
+    pset.weight,
+    pset.reps,
+    pset.is_completed
+  FROM tmp_current_day_performed_set AS pset
+  JOIN performed_exercise AS perf
+    ON perf.instance_day_id = p_instance_day_id
+    AND perf.exercise_order = pset.exercise_order
+  ORDER BY
+    pset.exercise_order ASC,
+    pset.set_order ASC;
 
   UPDATE instance_day
   SET
@@ -422,6 +641,9 @@ BEGIN
       is_current = FALSE
     WHERE instance_id = var_instance_id;
   END IF;
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_set;
+  DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_exercise;
 
   COMMIT;
 END $

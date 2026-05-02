@@ -1,6 +1,9 @@
 'use client';
 
-import { getReplaceExerciseOptionsAction } from '@/app/(main)/current/actions';
+import {
+  completeCurrentInstanceDayAction,
+  getReplaceExerciseOptionsAction,
+} from '@/app/(main)/current/actions';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,6 +21,7 @@ import type {
   Weekday,
 } from '@/lib/core/types';
 import { EllipsisVertical, SkipForward } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';
 import InstanceExerciseCard from './InstanceExerciseCard';
 import {
@@ -52,6 +56,7 @@ export default function InstanceDay({
   exercises,
   addedExercises,
 }: InstanceDayProps) {
+  const router = useRouter();
   const nextLocalExerciseId = useRef(-1);
   const [exerciseRows, setExerciseRows] = useState(() =>
     createCurrentInstanceExerciseRows(exercises, addedExercises)
@@ -66,6 +71,7 @@ export default function InstanceDay({
   const [exerciseOptionsError, setExerciseOptionsError] = useState<
     string | null
   >(null);
+  const [isSubmittingFinishedDay, setIsSubmittingFinishedDay] = useState(false);
 
   const handleAddExerciseBelow = (
     afterExerciseKey: string,
@@ -78,6 +84,7 @@ export default function InstanceDay({
         id: localExerciseId,
         plannedExerciseId: null,
         exerciseOrder: 0,
+        repeatUntilMesocycleEnd: false,
         status: 'ADDED',
         exercise: {
           id: exercise.id,
@@ -131,6 +138,10 @@ export default function InstanceDay({
   };
 
   const handleSubmitFinishedDay = async () => {
+    if (isSubmittingFinishedDay) {
+      return;
+    }
+
     const result = buildFinishCurrentInstanceDayPayload({
       currentInstanceDayId,
       exerciseRows,
@@ -144,7 +155,25 @@ export default function InstanceDay({
       return;
     }
 
-    console.log('Prepared current instance day payload.', result.payload);
+    setIsSubmittingFinishedDay(true);
+
+    try {
+      const actionResult = await completeCurrentInstanceDayAction(
+        result.payload
+      );
+
+      if (actionResult.status === 'success') {
+        router.refresh();
+      } else {
+        console.error('Failed to finish current instance day.', {
+          message: actionResult.message,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to finish current instance day.', error);
+    } finally {
+      setIsSubmittingFinishedDay(false);
+    }
   };
 
   return (
@@ -197,6 +226,7 @@ export default function InstanceDay({
         <div className="mt-1 mb-5">
           <Button
             className="h-12 w-full text-base font-semibold"
+            disabled={isSubmittingFinishedDay}
             size="lg"
             onClick={handleSubmitFinishedDay}
           >

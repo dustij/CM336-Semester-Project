@@ -39,7 +39,7 @@ export type FinishCurrentInstanceDayPerformedExercise = {
   exerciseId: number;
   exerciseOrder: number;
   status: PerformedExerciseStatus;
-  replaceOnTemplate: boolean;
+  repeatUntilMesocycleEnd: boolean;
   performedSets: FinishCurrentInstanceDayPerformedSet[];
 };
 
@@ -47,7 +47,7 @@ export type FinishCurrentInstanceDayPerformedSet = {
   setOrder: number;
   weight: number;
   reps: number;
-  isCompleted: true;
+  isCompleted: boolean;
 };
 
 export type BuildFinishCurrentInstanceDayPayloadResult =
@@ -117,10 +117,11 @@ export function buildFinishCurrentInstanceDayPayload({
       return [];
     }
 
-    const completedSets = draft.sets.filter(
-      (set) => set.status === 'active' && set.completed
+    const submitSets = draft.sets.filter(
+      (set) =>
+        (set.status === 'active' && set.completed) || set.status === 'skipped'
     );
-    const performedSets = completedSets.map((set) => {
+    const performedSets = submitSets.map((set) => {
       const weight = parseDatabaseInteger(set.weight);
       const reps = parseDatabaseInteger(set.reps);
 
@@ -144,7 +145,7 @@ export function buildFinishCurrentInstanceDayPayload({
         setOrder: set.setOrder,
         weight: weight ?? 0,
         reps: reps ?? 0,
-        isCompleted: true as const,
+        isCompleted: set.status === 'active' && set.completed,
       };
     });
 
@@ -161,10 +162,10 @@ export function buildFinishCurrentInstanceDayPayload({
         exerciseId: getSubmittedExerciseId(row.exercise, draft),
         exerciseOrder: row.exercise.exerciseOrder,
         status,
-        replaceOnTemplate:
-          isTemplateExercise(row.exercise) &&
-          draft.replacementExercise != null &&
-          draft.replacementRepeatsUntilMesocycleEnd,
+        repeatUntilMesocycleEnd:
+          status === 'REPLACED'
+            ? getRepeatUntilMesocycleEnd(row.exercise, draft)
+            : false,
         performedSets,
       },
     ];
@@ -237,7 +238,8 @@ function getPerformedExerciseStatus(
 
   if (
     draft.replacementExercise != null ||
-    exercise.performedExerciseStatus === 'REPLACED'
+    exercise.performedExerciseStatus === 'REPLACED' ||
+    getPreviousRepeatedReplacement(exercise) != null
   ) {
     return 'REPLACED';
   }
@@ -254,10 +256,46 @@ function getSubmittedExerciseId(
   }
 
   if (isTemplateExercise(exercise)) {
-    return exercise.performedExercise?.exercise.id ?? exercise.templateExercise.id;
+    return (
+      exercise.performedExercise?.exercise.id ??
+      getPreviousRepeatedReplacement(exercise)?.exercise.id ??
+      exercise.templateExercise.id
+    );
   }
 
   return exercise.exercise.id;
+}
+
+function getRepeatUntilMesocycleEnd(
+  exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise,
+  draft: CurrentInstanceExerciseSubmissionDraft
+) {
+  if (!isTemplateExercise(exercise)) {
+    return false;
+  }
+
+  if (draft.replacementExercise != null) {
+    return draft.replacementRepeatsUntilMesocycleEnd;
+  }
+
+  return (
+    Boolean(exercise.performedExercise?.repeatUntilMesocycleEnd) ||
+    getPreviousRepeatedReplacement(exercise) != null
+  );
+}
+
+function getPreviousRepeatedReplacement(exercise: CurrentInstanceExercise) {
+  const previousPerformedExercise =
+    exercise.previousPerformance?.performedExercise;
+
+  if (
+    previousPerformedExercise?.status === 'REPLACED' &&
+    previousPerformedExercise.repeatUntilMesocycleEnd
+  ) {
+    return previousPerformedExercise;
+  }
+
+  return null;
 }
 
 function getPlannedExerciseId(

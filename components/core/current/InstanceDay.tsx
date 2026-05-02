@@ -20,6 +20,10 @@ import type {
 import { EllipsisVertical, SkipForward } from 'lucide-react';
 import { useRef, useState } from 'react';
 import InstanceExerciseCard from './InstanceExerciseCard';
+import {
+  createCurrentInstanceExerciseRows,
+  insertExerciseRowBelow,
+} from './state';
 
 type InstanceDayProps = {
   currentInstanceDayId: number;
@@ -46,8 +50,8 @@ export default function InstanceDay({
   addedExercises,
 }: InstanceDayProps) {
   const nextLocalExerciseId = useRef(-1);
-  const [localAddedExercises, setLocalAddedExercises] = useState(() =>
-    [...addedExercises].sort((a, b) => a.exerciseOrder - b.exerciseOrder)
+  const [exerciseRows, setExerciseRows] = useState(() =>
+    createCurrentInstanceExerciseRows(exercises, addedExercises)
   );
   const [exerciseOptions, setExerciseOptions] =
     useState<ExerciseOptionsState | null>(null);
@@ -57,31 +61,17 @@ export default function InstanceDay({
     string | null
   >(null);
 
-  const exerciseRows = [
-    ...exercises.map((exercise) => ({
-      exercise,
-      key: `planned-${exercise.plannedExerciseId}`,
-      order: exercise.exerciseOrder,
-    })),
-    ...localAddedExercises.map((exercise) => ({
-      exercise,
-      key: `added-${exercise.id}`,
-      order: exercise.exerciseOrder,
-    })),
-  ].sort((a, b) => a.order - b.order);
-
   const handleAddExerciseBelow = (
-    afterExerciseOrder: number,
+    afterExerciseKey: string,
     exercise: ExerciseCatalogListItem
   ) => {
     const localExerciseId = nextLocalExerciseId.current--;
 
-    setLocalAddedExercises((currentExercises) => [
-      ...currentExercises,
-      {
+    setExerciseRows((currentRows) =>
+      insertExerciseRowBelow(currentRows, afterExerciseKey, {
         id: localExerciseId,
         plannedExerciseId: null,
-        exerciseOrder: afterExerciseOrder + Math.abs(localExerciseId) * 0.01,
+        exerciseOrder: 0,
         status: 'ADDED',
         exercise: {
           id: exercise.id,
@@ -90,8 +80,8 @@ export default function InstanceDay({
           muscleGroup: exercise.muscleGroup,
         },
         sets: [],
-      },
-    ]);
+      })
+    );
   };
 
   const loadExerciseOptions = async () => {
@@ -158,7 +148,9 @@ export default function InstanceDay({
             exerciseOptionsError={exerciseOptionsError}
             isLoadingExerciseOptions={isLoadingExerciseOptions}
             loadExerciseOptions={loadExerciseOptions}
-            onAddExerciseBelow={handleAddExerciseBelow}
+            onAddExerciseBelow={(addedExercise) =>
+              handleAddExerciseBelow(key, addedExercise)
+            }
           />
         ))}
         <div className="mt-1 mb-5">

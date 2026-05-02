@@ -46,10 +46,7 @@ type InstanceExerciseCardProps = {
   exerciseOptionsError: string | null;
   isLoadingExerciseOptions: boolean;
   loadExerciseOptions: () => Promise<void>;
-  onAddExerciseBelow: (
-    afterExerciseOrder: number,
-    exercise: ExerciseCatalogListItem
-  ) => void;
+  onAddExerciseBelow: (exercise: ExerciseCatalogListItem) => void;
 };
 
 type ExerciseOptionsState = {
@@ -181,9 +178,7 @@ export default function InstanceExerciseCard({
         submitLabel="Add"
         title="Add Exercise"
         onOpenChange={setIsAddDialogOpen}
-        onReplace={(addedExercise) =>
-          onAddExerciseBelow(getExerciseOrder(exercise), addedExercise)
-        }
+        onReplace={(addedExercise) => onAddExerciseBelow(addedExercise)}
       />
 
       <div className="flex flex-col gap-2.5 rounded-[8px] bg-white p-2.5 shadow">
@@ -413,12 +408,6 @@ function getExerciseIdentity(
   }
 
   return `added-${exercise.id}`;
-}
-
-function getExerciseOrder(
-  exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise
-) {
-  return exercise.exerciseOrder;
 }
 
 function isTemplateExercise(

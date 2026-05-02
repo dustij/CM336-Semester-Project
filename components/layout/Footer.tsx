@@ -56,7 +56,7 @@ export default function Footer() {
     pendingHref === href && !pathname.startsWith(href);
 
   return (
-    <nav className="border-border flex justify-between border-t bg-white px-5">
+    <nav className="border-border flex shrink-0 justify-between border-t bg-white px-5">
       <NavButton
         href="/current"
         icon={Timer}

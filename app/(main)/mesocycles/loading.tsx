@@ -6,9 +6,9 @@ export default function MesocyclesLoading() {
   return (
     <main
       aria-label="Loading mesocycles"
-      className="bg-my-background flex flex-1 flex-col items-center justify-center"
+      className="bg-my-background flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden"
     >
-      <div className="flex w-full animate-pulse items-center px-5 py-3.5">
+      <div className="flex w-full shrink-0 animate-pulse items-center px-5 py-3.5">
         <div className="flex-1">
           <div className="h-7 w-28 rounded-md bg-gray-200" />
         </div>

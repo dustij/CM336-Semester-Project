@@ -8,7 +8,7 @@ export default async function CurrentPage({ userId }: { userId: number }) {
 
   if (!currentMesocycle) {
     return (
-      <main className="bg-my-background flex flex-1 items-center justify-center px-5 py-4">
+      <main className="bg-my-background flex min-h-0 flex-1 items-center justify-center overflow-hidden px-5 py-4">
         <div className="flex flex-col items-center justify-center gap-2">
           <p className="text-body text-xl font-medium">No Active Mesocycle</p>
           <p className="text-body text-center">

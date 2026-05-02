@@ -80,6 +80,9 @@ export default function ReplaceExerciseDialog({
 
     onReplace(selectedExercise, repeatUntilMesocycleEnd);
     onOpenChange(false);
+    setSelectedMuscleGroup('');
+    setSelectedExercise(null);
+    setRepeatUntilMesocycleEnd(false);
   };
 
   return (

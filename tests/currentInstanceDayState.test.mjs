@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   buildFinishCurrentInstanceDayPayload,
+  createDefaultSubmissionDraft,
   createCurrentInstanceExerciseRows,
   insertExerciseRowBelow,
 } from '../components/core/current/state.ts';
@@ -31,11 +32,11 @@ const plannedExercise = (plannedExerciseId, exerciseOrder, name) => ({
   previousPerformance: null,
 });
 
-const addedExercise = (id, exerciseOrder, name) => ({
+const addedExercise = (id, exerciseOrder, name, overrides = {}) => ({
   id,
   plannedExerciseId: null,
   exerciseOrder,
-  repeatUntilMesocycleEnd: false,
+  repeatUntilMesocycleEnd: overrides.repeatUntilMesocycleEnd ?? false,
   status: 'ADDED',
   exercise: {
     id: Math.abs(id),
@@ -43,7 +44,7 @@ const addedExercise = (id, exerciseOrder, name) => ({
     equipment: null,
     muscleGroup: null,
   },
-  sets: [],
+  sets: overrides.sets ?? [],
 });
 
 test('insertExerciseRowBelow inserts directly below the selected planned exercise and renumbers rows', () => {
@@ -281,6 +282,56 @@ test('buildFinishCurrentInstanceDayPayload maps skipped, replaced, and added exe
   );
 });
 
+test('buildFinishCurrentInstanceDayPayload keeps repeat flag for added exercises', () => {
+  const rows = createCurrentInstanceExerciseRows(
+    [],
+    [
+      addedExercise(-1, 0, 'Decline Sit-Up', {
+        repeatUntilMesocycleEnd: true,
+      }),
+    ]
+  );
+
+  const result = buildFinishCurrentInstanceDayPayload({
+    currentInstanceDayId: 4,
+    exerciseRows: rows,
+    exerciseDrafts: {
+      'added--1': {
+        disposition: 'active',
+        replacementExercise: null,
+        replacementRepeatsUntilMesocycleEnd: false,
+        sets: [
+          {
+            setOrder: 1,
+            weight: '0',
+            reps: '15',
+            completed: true,
+            status: 'active',
+          },
+        ],
+      },
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.deepEqual(result.payload.performedExercises[0], {
+    instanceDayId: 4,
+    plannedExerciseId: null,
+    exerciseId: 1,
+    exerciseOrder: 0,
+    status: 'ADDED',
+    repeatUntilMesocycleEnd: true,
+    performedSets: [
+      {
+        setOrder: 1,
+        weight: 0,
+        reps: 15,
+        isCompleted: true,
+      },
+    ],
+  });
+});
+
 test('buildFinishCurrentInstanceDayPayload carries a previous repeated replacement forward', () => {
   const exercise = plannedExercise(10, 0, 'Bench Press');
   exercise.previousInstanceDayId = 2;
@@ -383,6 +434,43 @@ test('buildFinishCurrentInstanceDayPayload drops the repeat flag for skipped exe
     result.payload.performedExercises[0].repeatUntilMesocycleEnd,
     false
   );
+});
+
+test('createDefaultSubmissionDraft prefills template sets from the prior week', () => {
+  const exercise = plannedExercise(10, 0, 'Bench Press');
+  exercise.previousSets = [
+    {
+      id: 2,
+      setOrder: 2,
+      weight: 140,
+      reps: 7,
+      completed: true,
+    },
+    {
+      id: 1,
+      setOrder: 1,
+      weight: 135,
+      reps: 8,
+      completed: true,
+    },
+  ];
+
+  assert.deepEqual(createDefaultSubmissionDraft(exercise).sets, [
+    {
+      setOrder: 1,
+      weight: '135',
+      reps: '8',
+      completed: false,
+      status: 'active',
+    },
+    {
+      setOrder: 2,
+      weight: '140',
+      reps: '7',
+      completed: false,
+      status: 'active',
+    },
+  ]);
 });
 
 test('buildFinishCurrentInstanceDayPayload returns validation errors for invalid completed sets', () => {

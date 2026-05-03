@@ -184,8 +184,9 @@ END $
  DELIMITER ;
 
 
- CREATE VIEW mesocycle_template_details AS
- SELECT
+-- Create view of all template details (days, exercises, etc.)
+CREATE VIEW mesocycle_template_details AS
+SELECT
   mt.created_by_user_id AS created_by_user_id,
   mt.template_id AS template_id,
   mt.title AS title,
@@ -213,6 +214,128 @@ LEFT JOIN muscle_group AS mg
 WHERE mt.is_deleted = FALSE;
 
 
+-- Create view for workout flow
+CREATE VIEW current_instance_flow_details AS
+SELECT
+  flow.user_id AS 'User ID',
+  flow.is_current AS 'Is Current?',
+  flow.template_id AS 'Template ID',
+  flow.template_title AS 'Template Title',
+  flow.instance_id AS 'Instance ID',
+  flow.instance_day_status AS 'Instance Day Status',
+  flow.duration_weeks AS 'Duration in Weeks',
+  flow.week_number AS 'Instance Week --',
+  flow.weekday AS 'Weekday',
+  flow.planned_exercise AS 'Planned Exercise',
+  flow.performed_exercise AS 'Performed Exercise',
+  flow.exercise_order AS 'Exercise Order',
+  flow.performed_status AS 'Performed Status',
+  flow.repeat_until_end AS 'Repeat Until End?',
+  flow.set_order AS 'Set Order',
+  flow.set_weight AS 'Set Weight',
+  flow.set_reps AS 'Set Reps',
+  flow.set_completed AS 'Set Completed?'
+FROM (
+  -- Union two SELECT statements
+
+  -- The first SELECT starts from planned_exercise
+  --   - This allows every planned exercise to show, regardless if its been 
+  --   - performed yet. These rows show up with Performed Exercise = NULL.
+  --   - Attaching a performed exercise if one exists.
+
+  -- The second SELECT starts from performed_exercise
+  --   - This covers exercises added during the workout. Added exercises have
+  --   - no matching planned_exercise row because planned_exercise_id is NULL.
+
+  -- Together we get the entire picture for the mesocycle instance.
+  SELECT
+    mesocycle_instance.user_id,
+    mesocycle_instance.is_current,
+    mesocycle_template.template_id,
+    mesocycle_template.title AS template_title,
+    mesocycle_instance.instance_id,
+    instance_day.status AS instance_day_status,
+    mesocycle_template.duration_weeks,
+    instance_day.week_number,
+    template_day.day_of_week AS weekday,
+    template_day.day_order,
+    exercise_in_planned.name AS planned_exercise,
+    exercise_in_performed.name AS performed_exercise,
+    COALESCE(performed_exercise.exercise_order, planned_exercise.exercise_order) AS exercise_order,
+    performed_exercise.status AS performed_status,
+    performed_exercise.repeat_until_mesocycle_end AS repeat_until_end,
+    performed_set.set_order,
+    performed_set.weight AS set_weight,
+    performed_set.reps AS set_reps,
+    performed_set.is_completed AS set_completed
+  FROM mesocycle_instance
+  JOIN mesocycle_template
+    ON mesocycle_instance.template_id = mesocycle_template.template_id
+  JOIN instance_day
+    ON instance_day.instance_id = mesocycle_instance.instance_id
+  JOIN template_day
+    ON instance_day.template_day_id = template_day.template_day_id
+  JOIN planned_exercise
+    ON template_day.template_day_id = planned_exercise.template_day_id
+  LEFT JOIN performed_exercise
+    ON performed_exercise.instance_day_id = instance_day.instance_day_id
+    AND performed_exercise.planned_exercise_id = planned_exercise.planned_exercise_id
+  JOIN exercise exercise_in_planned
+    ON exercise_in_planned.exercise_id = planned_exercise.exercise_id
+  LEFT JOIN exercise exercise_in_performed
+    ON exercise_in_performed.exercise_id = performed_exercise.exercise_id
+  LEFT JOIN performed_set 
+    ON performed_set.performed_exercise_id = performed_exercise.performed_exercise_id
+
+  UNION ALL
+
+  SELECT
+    mesocycle_instance.user_id,
+    mesocycle_instance.is_current,
+    mesocycle_template.template_id,
+    mesocycle_template.title AS template_title,
+    mesocycle_instance.instance_id,
+    instance_day.status AS instance_day_status,
+    mesocycle_template.duration_weeks,
+    instance_day.week_number,
+    template_day.day_of_week AS weekday,
+    template_day.day_order,
+    NULL AS planned_exercise,
+    exercise_in_performed.name AS performed_exercise,
+    performed_exercise.exercise_order,
+    performed_exercise.status AS performed_status,
+    performed_exercise.repeat_until_mesocycle_end AS repeat_until_end,
+    performed_set.set_order,
+    performed_set.weight AS set_weight,
+    performed_set.reps AS set_reps,
+    performed_set.is_completed AS set_completed
+  FROM mesocycle_instance
+  JOIN mesocycle_template
+    ON mesocycle_instance.template_id = mesocycle_template.template_id
+  JOIN instance_day
+    ON instance_day.instance_id = mesocycle_instance.instance_id
+  JOIN template_day
+    ON instance_day.template_day_id = template_day.template_day_id
+  JOIN performed_exercise
+    ON performed_exercise.instance_day_id = instance_day.instance_day_id
+    AND performed_exercise.planned_exercise_id IS NULL
+  JOIN exercise exercise_in_performed
+    ON exercise_in_performed.exercise_id = performed_exercise.exercise_id
+  LEFT JOIN performed_set 
+    ON performed_set.performed_exercise_id = performed_exercise.performed_exercise_id
+) AS flow
+ORDER BY
+  flow.user_id ASC,
+  flow.is_current DESC,
+  flow.template_id ASC,
+  flow.instance_id ASC,
+  flow.week_number ASC,
+  flow.day_order ASC,
+  flow.exercise_order ASC,
+  flow.set_order ASC;
+
+
+
 -- Procedure: Set a new current instance for user
 DELIMITER $
 CREATE PROCEDURE set_new_current_for_user(
@@ -232,7 +355,7 @@ BEGIN
 
   START TRANSACTION;
 
-  # ensure template belongs to user
+  -- ensure template belongs to user
   SELECT COUNT(*)
   INTO var_template_count
   FROM mesocycle_template
@@ -245,7 +368,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Mesocycle template not found for user.';
   END IF;
 
-  # get the first day in the template
+  -- get the first day in the template
   SELECT (
     SELECT template_day_id
     FROM template_day
@@ -260,7 +383,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Mesocycle template must have at least one day.';
   END IF;
 
-  # set existing current instance for user to false
+  -- set existing current instance for user to false
   UPDATE mesocycle_instance
   SET
     is_current = FALSE,
@@ -268,7 +391,7 @@ BEGIN
   WHERE user_id = p_user_id
     AND is_current = TRUE;
 
-  # Now we can safely insert a new instance and set it as current for user
+  -- Now we can safely insert a new instance and set it as current for user
   INSERT INTO mesocycle_instance (
     template_id,
     user_id,
@@ -285,7 +408,7 @@ BEGIN
 
   SET var_instance_id = LAST_INSERT_ID();
 
-  # Insert the first instance day (following days are added after user completes each instance day)
+  -- Insert the first instance day (following days are added after user completes each instance day)
   INSERT INTO instance_day (
     template_day_id,
     instance_id,
@@ -295,14 +418,12 @@ BEGIN
     var_instance_id,
     1
   );
-
-  # implementation notes:
-  # instance days for the same template day but on following weeks populate sets from previous week
   
   COMMIT;
 
 END $
 DELIMITER ;
+
 
 -- Procedure: Orchestrate comleting instance day
 -- * MySQL/MariaDB does not allow an instance_day trigger to insert the next row
@@ -466,8 +587,13 @@ BEGIN
       OR exercise_order < 0
       OR status IS NULL
       OR status NOT IN ('COMPLETED', 'REPLACED', 'SKIPPED', 'ADDED')
-      OR (repeat_until_mesocycle_end = TRUE AND status <> 'REPLACED')
-      OR (repeat_until_mesocycle_end = TRUE AND planned_exercise_id IS NULL)
+      OR (
+        repeat_until_mesocycle_end = TRUE
+        AND NOT (
+          (status = 'REPLACED' AND planned_exercise_id IS NOT NULL)
+          OR (status = 'ADDED' AND planned_exercise_id IS NULL)
+        )
+      )
   ) THEN
     ROLLBACK;
     SIGNAL SQLSTATE '45000'

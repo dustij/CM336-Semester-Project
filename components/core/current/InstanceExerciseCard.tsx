@@ -48,7 +48,10 @@ type InstanceExerciseCardProps = {
   exerciseOptionsError: string | null;
   isLoadingExerciseOptions: boolean;
   loadExerciseOptions: () => Promise<void>;
-  onAddExerciseBelow: (exercise: ExerciseCatalogListItem) => void;
+  onAddExerciseBelow: (
+    exercise: ExerciseCatalogListItem,
+    repeatUntilMesocycleEnd: boolean
+  ) => void;
   onSubmissionDraftChange: (
     exerciseKey: string,
     draft: CurrentInstanceExerciseSubmissionDraft
@@ -213,7 +216,9 @@ export default function InstanceExerciseCard({
         submitLabel="Add"
         title="Add Exercise"
         onOpenChange={setIsAddDialogOpen}
-        onReplace={(addedExercise) => onAddExerciseBelow(addedExercise)}
+        onReplace={(addedExercise, repeatUntilMesocycleEnd) =>
+          onAddExerciseBelow(addedExercise, repeatUntilMesocycleEnd)
+        }
       />
 
       <div className="flex flex-col gap-2.5 rounded-[8px] bg-white p-2.5 shadow">
@@ -468,28 +473,32 @@ function mapPerformedSets(
   exerciseIdentity: string,
   preserveCompleted: boolean
 ) {
-  return sets.map((set) => ({
-    localId: `${exerciseIdentity}-set-${set.id}`,
-    setOrder: set.setOrder,
-    weight: String(set.weight),
-    reps: String(set.reps),
-    completed: preserveCompleted ? set.completed : false,
-    status: 'active' as const,
-  }));
+  return [...sets]
+    .sort((a, b) => a.setOrder - b.setOrder)
+    .map((set) => ({
+      localId: `${exerciseIdentity}-set-${set.id}`,
+      setOrder: set.setOrder,
+      weight: String(set.weight),
+      reps: String(set.reps),
+      completed: preserveCompleted ? set.completed : false,
+      status: 'active' as const,
+    }));
 }
 
 function mapPreviousSets(
   sets: CurrentInstancePreviousSet[],
   exerciseIdentity: string
 ) {
-  return sets.map((set) => ({
-    localId: `${exerciseIdentity}-previous-set-${set.id}`,
-    setOrder: set.setOrder,
-    weight: String(set.weight),
-    reps: String(set.reps),
-    completed: false,
-    status: 'active' as const,
-  }));
+  return [...sets]
+    .sort((a, b) => a.setOrder - b.setOrder)
+    .map((set) => ({
+      localId: `${exerciseIdentity}-previous-set-${set.id}`,
+      setOrder: set.setOrder,
+      weight: String(set.weight),
+      reps: String(set.reps),
+      completed: false,
+      status: 'active' as const,
+    }));
 }
 
 function getActiveSetCount(sets: EditableSet[]) {

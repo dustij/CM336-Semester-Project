@@ -75,7 +75,8 @@ export default function InstanceDay({
 
   const handleAddExerciseBelow = (
     afterExerciseKey: string,
-    exercise: ExerciseCatalogListItem
+    exercise: ExerciseCatalogListItem,
+    repeatUntilMesocycleEnd: boolean
   ) => {
     const localExerciseId = nextLocalExerciseId.current--;
 
@@ -84,7 +85,7 @@ export default function InstanceDay({
         id: localExerciseId,
         plannedExerciseId: null,
         exerciseOrder: 0,
-        repeatUntilMesocycleEnd: false,
+        repeatUntilMesocycleEnd,
         status: 'ADDED',
         exercise: {
           id: exercise.id,
@@ -217,8 +218,8 @@ export default function InstanceDay({
             exerciseOptionsError={exerciseOptionsError}
             isLoadingExerciseOptions={isLoadingExerciseOptions}
             loadExerciseOptions={loadExerciseOptions}
-            onAddExerciseBelow={(addedExercise) =>
-              handleAddExerciseBelow(key, addedExercise)
+            onAddExerciseBelow={(addedExercise, repeatUntilMesocycleEnd) =>
+              handleAddExerciseBelow(key, addedExercise, repeatUntilMesocycleEnd)
             }
             onSubmissionDraftChange={handleExerciseSubmissionDraftChange}
           />

@@ -163,7 +163,7 @@ export function buildFinishCurrentInstanceDayPayload({
         exerciseOrder: row.exercise.exerciseOrder,
         status,
         repeatUntilMesocycleEnd:
-          status === 'REPLACED'
+          status === 'REPLACED' || status === 'ADDED'
             ? getRepeatUntilMesocycleEnd(row.exercise, draft)
             : false,
         performedSets,
@@ -271,7 +271,7 @@ function getRepeatUntilMesocycleEnd(
   draft: CurrentInstanceExerciseSubmissionDraft
 ) {
   if (!isTemplateExercise(exercise)) {
-    return false;
+    return Boolean(exercise.repeatUntilMesocycleEnd);
   }
 
   if (draft.replacementExercise != null) {
@@ -308,16 +308,22 @@ function getSubmittedSets(
   exercise: CurrentInstanceExercise | CurrentInstancePerformedExercise
 ): CurrentInstanceExerciseSubmissionSetDraft[] {
   const sets = isTemplateExercise(exercise)
-    ? exercise.performedSets
+    ? exercise.performedSets.length > 0
+      ? exercise.performedSets
+      : exercise.previousSets
     : exercise.sets;
 
-  return sets.map((set) => ({
-    setOrder: set.setOrder,
-    weight: String(set.weight),
-    reps: String(set.reps),
-    completed: set.completed,
-    status: 'active',
-  }));
+  return [...sets]
+    .sort((a, b) => a.setOrder - b.setOrder)
+    .map((set) => ({
+      setOrder: set.setOrder,
+      weight: String(set.weight),
+      reps: String(set.reps),
+      completed: isTemplateExercise(exercise)
+        ? exercise.performedSets.length > 0 && set.completed
+        : set.completed,
+      status: 'active',
+    }));
 }
 
 function parseDatabaseInteger(value: string) {

@@ -53,11 +53,6 @@ instance_day.
 Only save/update the database when the user clicks finish for the instance_day.
 The interface function is completeCurrentInstanceDay.
 
-TODO: We need to update the CompleteCurrentInstanceDayInput for this function,
-it should take all relevant information such as performed_sets, replaced/skipped/
-added exercises. We should write a store procedure we can call that wraps a 
-transaction and can orchestrate all the necessary steps.
-
  */
 
 type InstanceDayStatus = 'PLANNED' | 'COMPLETED' | 'SKIPPED';
@@ -92,6 +87,7 @@ type CurrentInstanceRow = RowDataPacket & {
   current_performed_exercise_id: number | null;
   current_performed_exercise_exercise_id: number | null;
   current_performed_exercise_order: number | null;
+  current_performed_exercise_repeat_until_mesocycle_end: boolean | number | null;
   current_performed_exercise_status: PerformedExerciseStatus | null;
   current_performed_exercise_name: string | null;
   current_performed_exercise_equipment: string | null;
@@ -105,6 +101,10 @@ type CurrentInstanceRow = RowDataPacket & {
   previous_performed_exercise_id: number | null;
   previous_performed_exercise_exercise_id: number | null;
   previous_performed_exercise_order: number | null;
+  previous_performed_exercise_repeat_until_mesocycle_end:
+    | boolean
+    | number
+    | null;
   previous_performed_exercise_status: PerformedExerciseStatus | null;
   previous_performed_exercise_name: string | null;
   previous_performed_exercise_equipment: string | null;
@@ -121,6 +121,7 @@ type CurrentAddedPerformedExerciseRow = RowDataPacket & {
   performed_exercise_id: number;
   exercise_id: number;
   exercise_order: number;
+  repeat_until_mesocycle_end: boolean | number;
   status: PerformedExerciseStatus;
   exercise_name: string;
   equipment: string | null;
@@ -178,6 +179,7 @@ export type CurrentInstancePerformedExercise = {
   id: number;
   plannedExerciseId: number | null;
   exerciseOrder: number;
+  repeatUntilMesocycleEnd: boolean;
   status: PerformedExerciseStatus;
   exercise: CurrentInstanceExerciseSnapshot;
   sets: CurrentInstancePerformedSet[];
@@ -189,6 +191,7 @@ export type CurrentInstancePreviousPerformance = {
     id: number;
     plannedExerciseId: number | null;
     exerciseOrder: number;
+    repeatUntilMesocycleEnd: boolean;
     status: PerformedExerciseStatus;
     exercise: CurrentInstanceExerciseSnapshot;
     sets: CurrentInstancePreviousSet[];
@@ -263,6 +266,23 @@ export type CompleteCurrentInstanceDayInput = {
   userId: number;
   currentInstanceDayId: number;
   status: 'COMPLETED' | 'SKIPPED';
+  performedExercises: CompleteCurrentInstanceDayPerformedExerciseInput[];
+};
+
+export type CompleteCurrentInstanceDayPerformedExerciseInput = {
+  plannedExerciseId: number | null;
+  exerciseId: number;
+  exerciseOrder: number;
+  repeatUntilMesocycleEnd: boolean;
+  status: PerformedExerciseStatus;
+  performedSets: CompleteCurrentInstanceDayPerformedSetInput[];
+};
+
+export type CompleteCurrentInstanceDayPerformedSetInput = {
+  setOrder: number;
+  weight: number;
+  reps: number;
+  isCompleted: boolean;
 };
 
 //
@@ -400,6 +420,9 @@ export async function getCurrentMesocycleInstanceDetails(
                 id: row.current_performed_exercise_id,
                 plannedExerciseId: row.planned_exercise_id,
                 exerciseOrder: row.current_performed_exercise_order,
+                repeatUntilMesocycleEnd: Boolean(
+                  row.current_performed_exercise_repeat_until_mesocycle_end
+                ),
                 status: row.current_performed_exercise_status,
                 exercise: {
                   id: row.current_performed_exercise_exercise_id,
@@ -426,6 +449,9 @@ export async function getCurrentMesocycleInstanceDetails(
                   id: row.previous_performed_exercise_id,
                   plannedExerciseId: row.planned_exercise_id,
                   exerciseOrder: row.previous_performed_exercise_order,
+                  repeatUntilMesocycleEnd: Boolean(
+                    row.previous_performed_exercise_repeat_until_mesocycle_end
+                  ),
                   status: row.previous_performed_exercise_status,
                   exercise: {
                     id: row.previous_performed_exercise_exercise_id,
@@ -523,6 +549,7 @@ export async function getCurrentMesocycleInstanceDetails(
         id: row.performed_exercise_id,
         plannedExerciseId: null,
         exerciseOrder: row.exercise_order,
+        repeatUntilMesocycleEnd: Boolean(row.repeat_until_mesocycle_end),
         status: row.status,
         exercise: {
           id: row.exercise_id,
@@ -598,5 +625,6 @@ export async function completeCurrentInstanceDay(
     input.userId,
     input.currentInstanceDayId,
     input.status,
+    JSON.stringify(input.performedExercises),
   ]);
 }

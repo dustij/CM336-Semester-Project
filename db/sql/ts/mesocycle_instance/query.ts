@@ -41,6 +41,7 @@ SELECT
   current_perf.performed_exercise_id AS current_performed_exercise_id,
   current_perf.exercise_id AS current_performed_exercise_exercise_id,
   current_perf.exercise_order AS current_performed_exercise_order,
+  current_perf.repeat_until_mesocycle_end AS current_performed_exercise_repeat_until_mesocycle_end,
   current_perf.status AS current_performed_exercise_status,
   current_e.name AS current_performed_exercise_name,
   current_eq.name AS current_performed_exercise_equipment,
@@ -55,6 +56,7 @@ SELECT
   prev_perf.performed_exercise_id AS previous_performed_exercise_id,
   prev_perf.exercise_id AS previous_performed_exercise_exercise_id,
   prev_perf.exercise_order AS previous_performed_exercise_order,
+  prev_perf.repeat_until_mesocycle_end AS previous_performed_exercise_repeat_until_mesocycle_end,
   prev_perf.status AS previous_performed_exercise_status,
   prev_e.name AS previous_performed_exercise_name,
   prev_eq.name AS previous_performed_exercise_equipment,
@@ -123,12 +125,24 @@ WITH current_instance AS (
   FROM mesocycle_instance
   WHERE user_id = ?
     AND is_current = TRUE
+),
+current_instance_days AS (
+  SELECT
+    iday.instance_day_id,
+    iday.instance_id,
+    iday.template_day_id,
+    iday.week_number,
+    iday.status
+  FROM current_instance AS ci
+  JOIN instance_day AS iday
+    ON iday.instance_id = ci.instance_id
 )
 SELECT
   iday.instance_day_id,
   perf.performed_exercise_id,
   perf.exercise_id,
   perf.exercise_order,
+  perf.repeat_until_mesocycle_end,
   perf.status,
   e.name AS exercise_name,
   eq.name AS equipment,
@@ -138,9 +152,7 @@ SELECT
   pset.weight,
   pset.reps,
   pset.is_completed
-FROM current_instance AS ci
-JOIN instance_day AS iday
-  ON iday.instance_id = ci.instance_id
+FROM current_instance_days AS iday
 JOIN performed_exercise AS perf
   ON perf.instance_day_id = iday.instance_day_id
   AND perf.planned_exercise_id IS NULL
@@ -152,13 +164,51 @@ LEFT JOIN muscle_group AS mg
   ON mg.muscle_group_id = e.muscle_group_id
 LEFT JOIN performed_set AS pset
   ON pset.performed_exercise_id = perf.performed_exercise_id
+
+UNION ALL
+
+SELECT
+  iday.instance_day_id,
+  prev_perf.performed_exercise_id,
+  prev_perf.exercise_id,
+  prev_perf.exercise_order,
+  prev_perf.repeat_until_mesocycle_end,
+  prev_perf.status,
+  e.name AS exercise_name,
+  eq.name AS equipment,
+  mg.name AS muscle_group,
+  prev_set.set_id,
+  prev_set.set_order,
+  prev_set.weight,
+  prev_set.reps,
+  FALSE AS is_completed
+FROM current_instance_days AS iday
+JOIN instance_day AS prev_iday
+  ON prev_iday.instance_id = iday.instance_id
+  AND prev_iday.template_day_id = iday.template_day_id
+  AND prev_iday.week_number = iday.week_number - 1
+  AND prev_iday.status IN ('COMPLETED', 'SKIPPED')
+JOIN performed_exercise AS prev_perf
+  ON prev_perf.instance_day_id = prev_iday.instance_day_id
+  AND prev_perf.planned_exercise_id IS NULL
+  AND prev_perf.status = 'ADDED'
+  AND prev_perf.repeat_until_mesocycle_end = TRUE
+JOIN exercise AS e
+  ON e.exercise_id = prev_perf.exercise_id
+LEFT JOIN equipment AS eq
+  ON eq.equipment_id = e.equipment_id
+LEFT JOIN muscle_group AS mg
+  ON mg.muscle_group_id = e.muscle_group_id
+LEFT JOIN performed_set AS prev_set
+  ON prev_set.performed_exercise_id = prev_perf.performed_exercise_id
+WHERE iday.status = 'PLANNED'
 ORDER BY
-  iday.week_number ASC,
-  perf.exercise_order ASC,
-  pset.set_order ASC
+  instance_day_id ASC,
+  exercise_order ASC,
+  set_order ASC
 `;
 
 // Instance-day progression is handled by complete_current_instance_day in create.sql.
 export const completeCurrentInstanceDay = `
-CALL complete_current_instance_day(?, ?, ?)
+CALL complete_current_instance_day(?, ?, ?, ?)
 `;

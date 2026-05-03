@@ -43,3 +43,6 @@ DESCRIBE performed_set;
 
 SELECT 'MESOCYCLE_TEMPLATE_DETAILS (view)' AS `Table Name`;
 DESCRIBE mesocycle_template_details;
+
+SELECT 'CURRENT_INSTANCE_FLOW_DETAILS (view)' AS `Table Name`;
+DESCRIBE current_instance_flow_details;

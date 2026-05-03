@@ -205,6 +205,7 @@ export default function InstanceExerciseCard({
         onReplace={(replacement, repeatUntilMesocycleEnd) => {
           setReplacementExercise(replacement);
           setReplacementRepeatsUntilMesocycleEnd(repeatUntilMesocycleEnd);
+          setSets((currentSets) => currentSets.map(resetSetEntry));
         }}
       />
       <ReplaceExerciseDialog
@@ -421,6 +422,15 @@ function createEmptySet(
     reps: '',
     completed: false,
     status: 'active',
+  };
+}
+
+function resetSetEntry(set: EditableSet): EditableSet {
+  return {
+    ...set,
+    weight: '',
+    reps: '',
+    completed: false,
   };
 }
 

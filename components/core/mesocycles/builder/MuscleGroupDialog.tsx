@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { MuscleGroup } from '@/db/repository/muscle_group_repository';
+import type { MuscleGroup } from '@/db/repository/muscle_group_repository';
 import { Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';

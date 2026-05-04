@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/button';
-import { getCurrentMesocycle } from '@/db/repository/mesocycle_repository';
+import { getCurrentInstanceDay } from '@/db/repository/current_repository';
 import Link from 'next/link';
+import InstanceDay from './InstanceDay';
 
 export default async function CurrentPage({ userId }: { userId: number }) {
-  const currentMesocycle = await getCurrentMesocycle(userId);
+  const currentMesocycle = await getCurrentInstanceDay(userId);
 
   if (!currentMesocycle) {
     return (
-      <main className="bg-my-background flex flex-1 items-center justify-center px-5 py-4">
+      <main className="bg-my-background flex min-h-0 flex-1 items-center justify-center overflow-hidden px-5 py-4">
         <div className="flex flex-col items-center justify-center gap-2">
           <p className="text-body text-xl font-medium">No Active Mesocycle</p>
           <p className="text-body text-center">
@@ -23,5 +24,16 @@ export default async function CurrentPage({ userId }: { userId: number }) {
     );
   }
 
-  return <main className="bg-my-background"></main>;
+  return (
+    <InstanceDay
+      key={currentMesocycle.id}
+      currentInstanceDayId={currentMesocycle.id}
+      title={currentMesocycle.templateTitle}
+      weekNumber={currentMesocycle.weekNumber}
+      dayNumber={currentMesocycle.dayOrder}
+      weekday={currentMesocycle.dayOfWeek}
+      exercises={currentMesocycle.exercises}
+      addedExercises={currentMesocycle.addedExercises}
+    />
+  );
 }

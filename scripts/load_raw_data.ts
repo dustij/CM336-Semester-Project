@@ -69,13 +69,13 @@ CREATE TEMPORARY TABLE raw_exercise_import (
 
 INSERT INTO equipment (name)
 VALUES
-${equipment.map((name) => tuple([name])).join(',\n')}
-ON DUPLICATE KEY UPDATE name = VALUES(name);
+${equipment.map((name) => tuple([name])).join(',\n')} AS incoming
+ON DUPLICATE KEY UPDATE name = incoming.name;
 
 INSERT INTO muscle_group (name)
 VALUES
-${muscleGroups.map((name) => tuple([name])).join(',\n')}
-ON DUPLICATE KEY UPDATE name = VALUES(name);
+${muscleGroups.map((name) => tuple([name])).join(',\n')} AS incoming
+ON DUPLICATE KEY UPDATE name = incoming.name;
 
 INSERT INTO raw_exercise_import (name, equipment_name, muscle_group_name)
 VALUES
@@ -87,15 +87,21 @@ ${exercises
 
 INSERT INTO exercise (name, equipment_id, muscle_group_id)
 SELECT
-  raw.name,
-  equipment.equipment_id,
-  muscle_group.muscle_group_id
-FROM raw_exercise_import AS raw
-INNER JOIN equipment
-  ON equipment.name = raw.equipment_name
-INNER JOIN muscle_group
-  ON muscle_group.name = raw.muscle_group_name
-ON DUPLICATE KEY UPDATE name = VALUES(name);
+  imported.name,
+  imported.equipment_id,
+  imported.muscle_group_id
+FROM (
+  SELECT
+    raw.name,
+    equipment.equipment_id,
+    muscle_group.muscle_group_id
+  FROM raw_exercise_import AS raw
+  INNER JOIN equipment
+    ON equipment.name = raw.equipment_name
+  INNER JOIN muscle_group
+    ON muscle_group.name = raw.muscle_group_name
+) AS imported
+ON DUPLICATE KEY UPDATE name = imported.name;
 
 DROP TEMPORARY TABLE raw_exercise_import;
 

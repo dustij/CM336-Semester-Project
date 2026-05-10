@@ -425,10 +425,7 @@ END $
 DELIMITER ;
 
 
--- Procedure: Orchestrate comleting instance day
--- * MySQL/MariaDB does not allow an instance_day trigger to insert the next row
--- into instance_day, so this procedure handles the status update, end_date, and
--- next-day creation in one transaction.
+-- Procedure: Orchestrate completing instance day
 DELIMITER $
 CREATE PROCEDURE complete_current_instance_day(
   IN p_user_id INT,
@@ -452,11 +449,13 @@ BEGIN
     RESIGNAL;
   END;
 
+  -- ensure instance day status is valid
   IF p_status IS NULL OR p_status NOT IN ('COMPLETED', 'SKIPPED') THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Instance day status must be COMPLETED or SKIPPED.';
   END IF;
 
+  -- ensure performed exercises payload is a JSON array
   IF p_performed_exercises_json IS NULL
     OR JSON_VALID(p_performed_exercises_json) = 0
     OR JSON_TYPE(p_performed_exercises_json) <> 'ARRAY' THEN
@@ -466,9 +465,11 @@ BEGIN
 
   START TRANSACTION;
 
+  -- reset temporary payload tables for this session
   DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_exercise;
   DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_set;
 
+  -- create temporary table for performed exercises from the payload
   CREATE TEMPORARY TABLE tmp_current_day_performed_exercise (
     tmp_performed_exercise_id INT AUTO_INCREMENT PRIMARY KEY,
     planned_exercise_id INT NULL,
@@ -478,6 +479,7 @@ BEGIN
     status VARCHAR(20) NOT NULL
   );
 
+  -- create temporary table for performed sets from the payload
   CREATE TEMPORARY TABLE tmp_current_day_performed_set (
     tmp_performed_set_id INT AUTO_INCREMENT PRIMARY KEY,
     exercise_order INT NOT NULL,
@@ -487,6 +489,7 @@ BEGIN
     is_completed BOOLEAN NOT NULL
   );
 
+  -- get current instance day context and lock it for completion
   SELECT
     iday.instance_id,
     iday.template_day_id,
@@ -516,18 +519,21 @@ BEGIN
   LIMIT 1
   FOR UPDATE;
 
+  -- ensure current instance day belongs to user
   IF var_instance_id IS NULL THEN
     ROLLBACK;
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Current instance day not found for user.';
   END IF;
 
+  -- ensure current instance day has not already been completed
   IF var_status <> 'PLANNED' THEN
     ROLLBACK;
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Current instance day is not planned.';
   END IF;
 
+  -- extract performed exercises from payload
   INSERT INTO tmp_current_day_performed_exercise (
     planned_exercise_id,
     exercise_id,
@@ -552,6 +558,7 @@ BEGIN
     )
   ) AS payload;
 
+  -- extract performed sets from payload
   INSERT INTO tmp_current_day_performed_set (
     exercise_order,
     set_order,
@@ -579,6 +586,7 @@ BEGIN
   ) AS payload
   WHERE payload.set_order IS NOT NULL;
 
+  -- ensure performed exercises contain valid values
   IF EXISTS (
     SELECT 1
     FROM tmp_current_day_performed_exercise
@@ -600,6 +608,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Performed exercise payload contains invalid exercise data.';
   END IF;
 
+  -- ensure performed exercise orders are unique
   IF EXISTS (
     SELECT exercise_order
     FROM tmp_current_day_performed_exercise
@@ -611,6 +620,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Performed exercise payload contains duplicate exercise orders.';
   END IF;
 
+  -- ensure performed exercises reference existing exercises
   IF EXISTS (
     SELECT 1
     FROM tmp_current_day_performed_exercise AS perf
@@ -623,6 +633,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Performed exercise payload references an unknown exercise.';
   END IF;
 
+  -- ensure performed exercises reference planned exercises from current template day
   IF EXISTS (
     SELECT 1
     FROM tmp_current_day_performed_exercise AS perf
@@ -637,6 +648,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Performed exercise payload references an invalid planned exercise.';
   END IF;
 
+  -- ensure performed sets contain valid values
   IF EXISTS (
     SELECT 1
     FROM tmp_current_day_performed_set
@@ -652,6 +664,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Performed set payload contains invalid set data.';
   END IF;
 
+  -- ensure performed set orders are unique per exercise
   IF EXISTS (
     SELECT
       exercise_order,
@@ -665,6 +678,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Performed set payload contains duplicate set orders.';
   END IF;
 
+  -- ensure performed sets reference a performed exercise
   IF EXISTS (
     SELECT 1
     FROM tmp_current_day_performed_set AS pset
@@ -677,9 +691,11 @@ BEGIN
       SET MESSAGE_TEXT = 'Performed set payload references an unknown performed exercise.';
   END IF;
 
+  -- replace existing performed exercises for current instance day
   DELETE FROM performed_exercise
   WHERE instance_day_id = p_instance_day_id;
 
+  -- insert performed exercises for current instance day
   INSERT INTO performed_exercise (
     planned_exercise_id,
     exercise_id,
@@ -698,6 +714,7 @@ BEGIN
   FROM tmp_current_day_performed_exercise
   ORDER BY exercise_order ASC;
 
+  -- insert performed sets for current instance day
   INSERT INTO performed_set (
     performed_exercise_id,
     set_order,
@@ -719,12 +736,14 @@ BEGIN
     pset.exercise_order ASC,
     pset.set_order ASC;
 
+  -- mark current instance day as completed or skipped
   UPDATE instance_day
   SET
     status = p_status,
     end_date = COALESCE(end_date, CURRENT_DATE())
   WHERE instance_day_id = p_instance_day_id;
 
+  -- get next template day in the current week
   SELECT template_day_id
   INTO var_next_template_day_id
   FROM template_day
@@ -734,6 +753,7 @@ BEGIN
   LIMIT 1;
 
   IF var_next_template_day_id IS NOT NULL THEN
+    -- insert next template day in the same week
     INSERT IGNORE INTO instance_day (
       template_day_id,
       instance_id,
@@ -744,6 +764,7 @@ BEGIN
       var_week_number
     );
   ELSEIF var_week_number < var_duration_weeks THEN
+    -- get first template day for the next week
     SELECT template_day_id
     INTO var_next_template_day_id
     FROM template_day
@@ -751,6 +772,7 @@ BEGIN
     ORDER BY day_order ASC
     LIMIT 1;
 
+    -- insert first instance day in the next week
     INSERT IGNORE INTO instance_day (
       template_day_id,
       instance_id,
@@ -761,6 +783,7 @@ BEGIN
       var_week_number + 1
     );
   ELSE
+    -- close current mesocycle instance after the final day
     UPDATE mesocycle_instance
     SET
       end_date = CURRENT_DATE(),
@@ -768,6 +791,7 @@ BEGIN
     WHERE instance_id = var_instance_id;
   END IF;
 
+  -- clean up temporary payload tables
   DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_set;
   DROP TEMPORARY TABLE IF EXISTS tmp_current_day_performed_exercise;
 

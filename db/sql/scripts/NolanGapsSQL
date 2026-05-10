@@ -1,1 +1,39 @@
-#test
+#function
+
+drop function if exists totalWorkouts;
+delimiter $$
+
+create function totalWorkouts(
+workouts int
+)
+returns varchar(50)
+deterministic
+begin
+    return CONCAT('You have completed ', workouts, ' workouts.');
+end$$
+
+delimiter ;
+
+# five statements
+
+#statement 1: bing bong bing bong... bing bong bing bong
+select * from equipment where name like '%bell%';
+
+#statement 2: difficulty tweak
+update equipment
+set name = 'Esoterically Difficult Barbell' where name like 'Ez Barbell';
+select * from equipment where name like '%bell%';
+
+#statement 3: counting limbs
+select count(*) from exercise where name like '%arm%' or '%leg%';
+
+#statement 4: gimme money gimme money gimme money gimme money gimme money 
+update exercise
+set name = CONCAT(name, ' (Mesocycle Planner Premium Req.)') where exercise_id > 100; #use below view statement to see the update. it works
+
+#statement 5: skipping leg day
+drop view if exists view1; #view statements just for proof it worked
+create view view1 as select * from exercise;
+select * from view1;
+delete from exercise where name like '%Leg%';
+select * from view1;

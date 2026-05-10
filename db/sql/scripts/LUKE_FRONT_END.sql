@@ -10,7 +10,7 @@ WHERE u.user_id = m.created_by_user_id
 AND m.template_id = ?;
 
 SELECT * 
-FROM planned_exercise pl, performed exercise pf
+FROM planned_exercise pl, performed_exercise pf
 WHERE pf.status = ?;
 
 SELECT *
@@ -30,13 +30,13 @@ GROUP BY m.muscle_group_id;
 SELECT e.exercise_id, COUNT(e.exercise_id)
 FROM planned_exercise p, exercise e
 WHERE e.exercise_id = p.exercise_id
-GROUP BY e.exercise_id
+GROUP BY e.exercise_id;
 
 SELECT e.exercise_id, COUNT(e.exercise_id)
 FROM performed_exercise p, exercise e
 WHERE e.exercise_id = p.exercise_id
 AND p.status = ?
-GROUP BY e.exercise_id
+GROUP BY e.exercise_id;
 
 SELECT *
 FROM user u, mesocycle_instance m

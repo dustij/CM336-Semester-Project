@@ -11,10 +11,12 @@ import type { ExerciseListItem } from '@/lib/core/types';
 type ExerciseComboBoxProps = {
   exercises: ExerciseListItem[];
   value: ExerciseListItem | null;
+  disabled?: boolean;
   onValueChange: (value: ExerciseListItem | null) => void;
 };
 
 export default function ExerciseComboBox({
+  disabled = false,
   exercises,
   value,
   onValueChange,
@@ -31,6 +33,7 @@ export default function ExerciseComboBox({
       <ComboboxInput
         placeholder="Choose exercise..."
         className="text-body h-full"
+        disabled={disabled}
       />
       <ComboboxContent>
         <ComboboxEmpty>No exercise found.</ComboboxEmpty>

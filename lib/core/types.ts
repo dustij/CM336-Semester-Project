@@ -14,6 +14,8 @@ export type WorkoutSessionStatus = 'planned' | 'in_progress' | 'completed';
 export type MesocycleListItem = {
   id: number;
   title: string;
+  durationWeeks: number;
+  daysPerWeek: number;
 };
 
 export type ExerciseListItem = {

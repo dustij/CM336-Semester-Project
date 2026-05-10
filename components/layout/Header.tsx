@@ -45,7 +45,7 @@ export const AvatarDropdown = () => {
 
 export default function Header() {
   return (
-    <header className="border-border border-b-2 bg-white px-5 py-4">
+    <header className="border-border shrink-0 border-b-2 bg-white px-5 py-4">
       <div className="mx-auto flex w-full items-center justify-between">
         <div>
           <p className="text-xl tracking-[-0.03em] text-gray-950">

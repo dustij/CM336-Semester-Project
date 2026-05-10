@@ -10,6 +10,7 @@ import { Weekday } from '@/lib/core/types';
 
 type DayComboBoxProps = {
   value: Weekday | null;
+  disabled?: boolean;
   onValueChange: (value: Weekday | null) => void;
 };
 
@@ -24,12 +25,17 @@ const WEEKDAYS: Weekday[] = [
 ];
 
 export default function DayComboBox({
+  disabled = false,
   value,
   onValueChange,
 }: DayComboBoxProps) {
   return (
     <Combobox items={WEEKDAYS} value={value} onValueChange={onValueChange}>
-      <ComboboxInput placeholder="Choose day..." className="text-body h-full" />
+      <ComboboxInput
+        placeholder="Choose day..."
+        className="text-body h-full"
+        disabled={disabled}
+      />
       <ComboboxContent>
         <ComboboxEmpty>No day found.</ComboboxEmpty>
         <ComboboxList>

@@ -1,0 +1,1 @@
+SOURCE db/sql/scripts/select.sql;

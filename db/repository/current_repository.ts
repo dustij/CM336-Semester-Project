@@ -87,7 +87,10 @@ type CurrentInstanceRow = RowDataPacket & {
   current_performed_exercise_id: number | null;
   current_performed_exercise_exercise_id: number | null;
   current_performed_exercise_order: number | null;
-  current_performed_exercise_repeat_until_mesocycle_end: boolean | number | null;
+  current_performed_exercise_repeat_until_mesocycle_end:
+    | boolean
+    | number
+    | null;
   current_performed_exercise_status: PerformedExerciseStatus | null;
   current_performed_exercise_name: string | null;
   current_performed_exercise_equipment: string | null;
@@ -211,6 +214,43 @@ export type CurrentInstanceDay = {
   addedExercises: CurrentInstancePerformedExercise[];
 };
 
+// {
+//   "id": 4,
+//   "templateDayId": 1,
+//   "weekNumber": 1,
+//   "dayOfWeek": "Monday",
+//   "dayOrder": 1,
+//   "status": "PLANNED",
+//   "endDate": null,
+//   "templateTitle": "MT Template",
+//   "exercises": [
+//     {
+//       "source": "TEMPLATE",
+//       "plannedExerciseId": 1,
+//       "exerciseId": 6,
+//       "name": "Alternate Lateral Pulldown",
+//       "equipment": "Cable",
+//       "muscleGroup": "Back",
+//       "exerciseOrder": 0,
+//       "performedExerciseId": null,
+//       "performedExerciseStatus": null,
+//       "performedSets": [],
+//       "templateExercise": {
+//         "id": 6,
+//         "name": "Alternate Lateral Pulldown",
+//         "equipment": "Cable",
+//         "muscleGroup": "Back"
+//       },
+//       "performedExercise": null,
+//       "previousInstanceDayId": null,
+//       "previousPerformedExerciseId": null,
+//       "previousSets": [],
+//       "previousPerformance": null
+//     }
+//   ],
+//   "addedExercises": []
+// }
+
 export type CurrentMesocycleInstanceDetails = {
   id: number;
   templateId: number;
@@ -284,46 +324,6 @@ export type CompleteCurrentInstanceDayPerformedSetInput = {
   reps: number;
   isCompleted: boolean;
 };
-
-//
-// Current Instance Day Object:
-//
-// {
-//   "id": 4,
-//   "templateDayId": 1,
-//   "weekNumber": 1,
-//   "dayOfWeek": "Monday",
-//   "dayOrder": 1,
-//   "status": "PLANNED",
-//   "endDate": null,
-//   "templateTitle": "MT Template",
-//   "exercises": [
-//     {
-//       "source": "TEMPLATE",
-//       "plannedExerciseId": 1,
-//       "exerciseId": 6,
-//       "name": "Alternate Lateral Pulldown",
-//       "equipment": "Cable",
-//       "muscleGroup": "Back",
-//       "exerciseOrder": 0,
-//       "performedExerciseId": null,
-//       "performedExerciseStatus": null,
-//       "performedSets": [],
-//       "templateExercise": {
-//         "id": 6,
-//         "name": "Alternate Lateral Pulldown",
-//         "equipment": "Cable",
-//         "muscleGroup": "Back"
-//       },
-//       "performedExercise": null,
-//       "previousInstanceDayId": null,
-//       "previousPerformedExerciseId": null,
-//       "previousSets": [],
-//       "previousPerformance": null
-//     }
-//   ],
-//   "addedExercises": []
-// }
 
 export type CurrentInstanceRepository = {
   getCurrentMesocycleInstanceDetails(
@@ -612,8 +612,6 @@ export async function getCurrentInstanceDay(
 
   const currentInstanceDay =
     currentInstance.days.find((day) => day.status === 'PLANNED') ?? null;
-
-  // console.log(JSON.stringify(currentInstanceDay, null, 2));
 
   return currentInstanceDay;
 }
